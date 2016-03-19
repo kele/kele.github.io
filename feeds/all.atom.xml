@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2016-03-04T00:00:00+01:00</updated><entry><title>CIFAR10 classification summary</title><link href="/cifar10-classification-summary.html" rel="alternate"></link><updated>2016-03-04T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:,2016-03-04:cifar10-classification-summary.html</id><summary type="html">&lt;h1&gt;Problem description&lt;/h1&gt;
+&lt;p&gt;&lt;a href="https://www.cs.toronto.edu/~kriz/cifar.html"&gt;CIFAR10&lt;/a&gt; classification is a very popular problem among neural networks enthusiast. The main task is to map 32x32 RGB images to (disjoint) classes. This (simple) version of the problem differentiates 10 classes (hence the name).&lt;/p&gt;
+&lt;p&gt;A list of best results for this problem can be found &lt;a href="http://rodrigob.github.io/are_we_there_yet/build/classification_datasets_results.html"&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;As one can guess, this problem is significantly harder than MNIST, both because of the input size and the nature of the images (two pictures of cats can be very different, but a digit always has roughly the same shape).&lt;/p&gt;
+&lt;p&gt;The CIFAR10 dataset consists of 60000 32x32 colour images in 10 classes, with 6000 images per class. There are 50000 training images and 10000 test images. &lt;/p&gt;
+&lt;h1&gt;Network architecture&lt;/h1&gt;
+&lt;p&gt;Since the dataset is a collection of 2D images, using convolutional neural networks seem to be a good place to start. This is because of the fact that CNNs are able to learn to detect some local properties of the input, by looking at a patch of data at once. This is not only vital for doing any image processing work (i.e. edge detection), but it can greately decrease the size of the NN, since neurons used to detect a single feature share parameters (weights).&lt;/p&gt;
+&lt;h1&gt;How the training is done?&lt;/h1&gt;
+&lt;h2&gt;Technique&lt;/h2&gt;
+&lt;p&gt;Stochastic gradient descent (with mini batches) is used as a standard learning technique.&lt;/p&gt;
+&lt;h2&gt;Epochs&lt;/h2&gt;
+&lt;p&gt;The training set is divided into epochs of a size of 40000 images, after each a validation set of size 10000 is used. The data is split into mini batches.&lt;/p&gt;
+&lt;h2&gt;Mini batches&lt;/h2&gt;
+&lt;p&gt;Mini batches of size 100 are used. Using less than that seems to be a bad idea, since we have 10 classes and we would like to see at least a few examples of each class in one mini batch. Using more than that might speed up the computation on GPUs, but because of the choice of the learning technique (SGD), it might actually take longer to learn (fewer steps).&lt;/p&gt;
+&lt;h2&gt;Data preparation&lt;/h2&gt;
+&lt;p&gt;The data is scaled and shifted to fit in [-1; +1] range.&lt;/p&gt;
+&lt;h1&gt;Report&lt;/h1&gt;
+&lt;h2&gt;Getting around 75% accuracy&lt;/h2&gt;
+&lt;p&gt;This is a sample network architecture that is able to quickly learn to solve our problem achieving around 75% accuracy on the test dataset.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Input layer&lt;/li&gt;
+&lt;li&gt;2d Convolutional layer (128 filters of size 5x5, ReLu)&lt;/li&gt;
+&lt;li&gt;2d MaxPool layer (pool size 2x2)&lt;/li&gt;
+&lt;li&gt;2d Convolutional layer (128 filters of size 5x5, ReLu)&lt;/li&gt;
+&lt;li&gt;2d MaxPool layer (pool size 2x2)&lt;/li&gt;
+&lt;li&gt;Dropout layer (probability = 0.5)&lt;/li&gt;
+&lt;li&gt;Dense layer (256 neurons, ReLu)&lt;/li&gt;
+&lt;li&gt;Softmax layer (10 neurons)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This simple architecture deservers a short explanation.&lt;/p&gt;
+&lt;p&gt;ReLu is used as the activation function for the obvious reasons (efficient computation, no vanishing gradient, etc.). At the moment of writing this report, it seems to be the most popular activation function for NNs.&lt;/p&gt;
+&lt;p&gt;An affine (dense) layer is introduced near the end of the network for simplicity. Although, all-convolutional NNs are possible (&lt;a href="http://arxiv.org/abs/1412.6806"&gt;http://arxiv.org/abs/1412.6806&lt;/a&gt;), their design is a little more sophisticated.&lt;/p&gt;
+&lt;p&gt;As for mitigating the risks of overfitting, early stopping with a validation set is used. The second tool helping to deal with this phenomena is the dropout.&lt;/p&gt;
+&lt;h2&gt;Getting over 75% accuracy&lt;/h2&gt;
+&lt;h3&gt;Techniques used to improve the learning process&lt;/h3&gt;
+&lt;p&gt;The architecture mentioned in previous chapter is probably not suitable for getting statistically significant over 75% accuracy without a bit of luck.&lt;/p&gt;
+&lt;p&gt;Since the network is not that small, there is a risk of overfitting. Besides dropout, weight decay (L2 regularization) and momentum are used.&lt;/p&gt;
+&lt;p&gt;Learning rate decay is used as a standard approach to improve both the speed and the effectiveness of the process.&lt;/p&gt;
+&lt;h3&gt;Architecture&lt;/h3&gt;
+&lt;p&gt;This architecture together with mentioned improvements can be used to achieve 78% test accuracy within just 25 epochs of training. One epoch took around 15s on GeForce GTX 780 GPU, which sums up to less than 7 minutes of training.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Input layer&lt;/li&gt;
+&lt;li&gt;2d Convolutional layer (128 filters of size 5x5, ReLu)&lt;/li&gt;
+&lt;li&gt;2d MaxPool layer (pool size 2x2)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;2d Convolutional layer (64 filters of size 5x5, ReLu)&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;2d MaxPool layer (pool size 2x2)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Dropout layer (probability = 0.5)&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Dense layer (800 neurons, ReLu)&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Dropout layer (probability = 0.5)&lt;/li&gt;
+&lt;li&gt;Dense layer (256 neurons, ReLu)&lt;/li&gt;
+&lt;li&gt;Softmax layer (10 neurons)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;It seems that keeping two big convolutional layers was not needed. On the other hand, introducing an additional affine layer helped achieving better accuracy. Adding more dropout layers seems to introduce too much noise to make the learning process efficient.&lt;/p&gt;
+&lt;h3&gt;Hyperparameters&lt;/h3&gt;
+&lt;p&gt;The hyperparamers were found by trial and error.&lt;/p&gt;
+&lt;p&gt;The learning rate decay formula:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;start: 0.01&lt;/li&gt;
+&lt;li&gt;divide by 1.5 after 4000 mini batches&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Momentum: 0.9.&lt;/p&gt;
+&lt;p&gt;Weight decay: 0.01.&lt;/p&gt;
+&lt;h2&gt;Getting over 80% accuracy&lt;/h2&gt;
+&lt;h3&gt;Data augmentation&lt;/h3&gt;
+&lt;p&gt;Introducing random horizontal flip (mirror, left to right) improved the accuracy to over 80% after less than 60 epochs (with the same epoch computation time as before, 15 seconds).&lt;/p&gt;
+&lt;h2&gt;Getting 81.72% accuracy&lt;/h2&gt;
+&lt;p&gt;Data augmentation
+Adding a random rotation between [-20; +20] degrees allowed to achieve 81.72% accuracy on the test dataset without increasing the learning time.&lt;/p&gt;
+&lt;h1&gt;Implementation details&lt;/h1&gt;
+&lt;p&gt;A lightweight library built on top of &lt;a href="http://deeplearning.net/software/theano/"&gt;Theano&lt;/a&gt; called &lt;a href="https://github.com/Lasagne/Lasagne"&gt;Lasagne&lt;/a&gt; was used for the implementation. The source code is available here: &lt;a href="https://github.com/kele/cifar_recognition/"&gt;https://github.com/kele/cifar_recognition/&lt;/a&gt;. Using it is pretty straightforward and I highly recommend this as a base for any neural networks project.&lt;/p&gt;
+&lt;h1&gt;Future work&lt;/h1&gt;
+&lt;h2&gt;Deeper neural network&lt;/h2&gt;
+&lt;p&gt;A deeper neural network could be used to improve the results. On the other hand, that might introduce even bigger risk of overfitting and greately increase the learning time.&lt;/p&gt;
+&lt;h2&gt;Data augmentation&lt;/h2&gt;
+&lt;p&gt;Data augmentation proved to be very helpful for solving the CIFAR10 problem. The solutions described in this report could take advantage of image transformations such as ZCA. Also, using slight shifts and rotations, or random crops of the image could be used to artificially enlarge the training dataset.&lt;/p&gt;
+&lt;h1&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;One can easily solve the CIFAR10 classification problem with a decent accuracy using widely available Python libraries. The only caveat is the fact that deep neural networks might require efficient, CUDA-capable GPUs to work (and learn) fast.&lt;/p&gt;</summary></entry><entry><title>Using Lasagne to achieve over 75% accuracy on CIFAR10.</title><link href="/using-lasagne-to-achieve-over-75-accuracy-on-cifar10.html" rel="alternate"></link><updated>2016-01-25T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:,2016-01-25:using-lasagne-to-achieve-over-75-accuracy-on-cifar10.html</id><summary type="html">&lt;p&gt;This is the first report of my battle with the &lt;a href="https://www.cs.toronto.edu/~kriz/cifar.html"&gt;CIFAR10
+classification&lt;/a&gt; problem.&lt;/p&gt;
+&lt;p&gt;I've decided to use &lt;a href="http://lasagne.readthedocs.org/en/latest/"&gt;Lasagne&lt;/a&gt; which
+is a ligthweight library build on top of
+&lt;a href="http://deeplearning.net/software/theano/"&gt;Theano&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Here's the source code I'll be talking about in this post:
+&lt;a href="https://github.com/kele/cifar_recognition/tree/over75"&gt;link&lt;/a&gt;.&lt;/p&gt;
+&lt;h1&gt;Overview&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;I don't do any data augmentation.&lt;/li&gt;
+&lt;li&gt;This piece of code was intended to get me familiarized with Lasagne.&lt;/li&gt;
+&lt;li&gt;It achieves slighly over 75% accuracy and I think it's the peak for this
+  design of the neural network.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;What is in my toolbox?&lt;/h1&gt;
+&lt;p&gt;My network consists of both dense and convolutional layers. There's a good
+reason to use the latter, since they might exploit the nature of our problem
+(which is image classification). More on that can be read
+&lt;a href="http://colah.github.io/posts/2014-07-Conv-Nets-Modular/"&gt;here&lt;/a&gt;,
+&lt;a href="http://colah.github.io/posts/2014-07-Understanding-Convolutions/"&gt;here&lt;/a&gt; and
+&lt;a href="http://neuralnetworksanddeeplearning.com/chap6.html"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The main intution behind convolutional layers is as follows. We want to detect a
+&lt;em&gt;local&lt;/em&gt; property of an image, i.e. an edge. We don't really care (for now) where
+it is, we just want to be sure that it exists. There's no difference in
+detecting an edge in the middle of an image or a few pixels to the right.
+Because of that, it makes no sense to keep separate parameters (weights and
+biases) for different neurons, just because they're looking in some other place
+for the same thing.&lt;/p&gt;
+&lt;p&gt;An additional benefit is the fact that since we're sharing the parameters, there
+are less of them to find.&lt;/p&gt;
+&lt;h1&gt;Architecture&lt;/h1&gt;
+&lt;p&gt;How does the architecture look like?&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Input layer&lt;/li&gt;
+&lt;li&gt;2d Convolutional layer (128 filters of size 5x5, ReLu)&lt;/li&gt;
+&lt;li&gt;2d MaxPool layer (pool size 2x2)&lt;/li&gt;
+&lt;li&gt;2d Convolutional layer (128 filters of size 5x5, ReLu)&lt;/li&gt;
+&lt;li&gt;2d MaxPool layer (pool size 2x2)&lt;/li&gt;
+&lt;li&gt;Dropout layer (probability = 0.5)&lt;/li&gt;
+&lt;li&gt;Dense layer (256 neurons, ReLu)&lt;/li&gt;
+&lt;li&gt;Softmax layer (10 neurons)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;Results&lt;/h1&gt;
+&lt;p&gt;With this architecture I've managed to achieve a little over 75% of accuracy
+with around 2 hours of training (on my GT645&lt;strong&gt;M&lt;/strong&gt;, which is not a speed demon).&lt;/p&gt;
+&lt;h1&gt;Roadmap&lt;/h1&gt;
+&lt;p&gt;So, what can we do now?&lt;/p&gt;
+&lt;h3&gt;Changing the network architecture&lt;/h3&gt;
+&lt;p&gt;So far we can see that my network is pretty shallow. Maybe adding more filters
+could help? Also, it might be helpful to put a dense ReLu layer between some
+convolution layers. I'll have to experiment with these ideas.&lt;/p&gt;
+&lt;h3&gt;Better learning techniques&lt;/h3&gt;
+&lt;p&gt;This version of the code doesn't use &lt;strong&gt;weight decay&lt;/strong&gt; nor &lt;strong&gt;learning rate&lt;/strong&gt;
+decay. The only enchancement is the &lt;strong&gt;momentum&lt;/strong&gt;. Both of the missing techniques
+could be added easily.&lt;/p&gt;
+&lt;p&gt;These techniques require some additional tuning, so it might be a
+little time consuming to find the right parameters. It'd be a good idea to do
+that as the last step, after picking a good network architecture.&lt;/p&gt;
+&lt;h3&gt;Data augmentation&lt;/h3&gt;
+&lt;p&gt;So far I haven't done anything with the input data at all.&lt;/p&gt;
+&lt;p&gt;The following simple transformations come to my mind:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;cropping the image at random&lt;/li&gt;
+&lt;li&gt;horizontal flip&lt;/li&gt;
+&lt;li&gt;rescaling&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="neural networks"></category><category term="cifar"></category></entry><entry><title>Getting CUDA working on a laptop with two GPUs</title><link href="/getting-cuda-working-on-a-laptop-with-two-gpus.html" rel="alternate"></link><updated>2016-01-18T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:,2016-01-18:getting-cuda-working-on-a-laptop-with-two-gpus.html</id><summary type="html">&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
+14.04. These steps might actually help somebody.&lt;/p&gt;
+&lt;p&gt;First, download the &lt;a href="http://developer.nvidia.com/cuda-downloads"&gt;NVIDIA CUDA Toolkit&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Remove all old NVIDIA-related drivers:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get remove --purge nvidia*
+sudo apt-get --purge remove xserver-xorg-video-nouveau
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Backup your &lt;code&gt;/etc/modprobe.d/blacklist.conf&lt;/code&gt; and make sure it contains these lines:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;blacklist nouveau
+blacklist lbm-nouveau
+blacklist nvidia-173
+blacklist nvidia-96
+blacklist nvidia-current
+blacklist nvidia-173-updates
+blacklist nvidia-96-updates
+&lt;span class="nb"&gt;alias&lt;/span&gt; nvidia nvidia_current_updates
+&lt;span class="nb"&gt;alias&lt;/span&gt; nouveau off
+&lt;span class="nb"&gt;alias&lt;/span&gt; lbm-nouveau off
+options nouveau &lt;span class="nv"&gt;modeset&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Add bumblebee and xorg-edgers repositories:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-add-repository ppa:bumblebee/stable -y
+sudo add-apt-repository ppa:xorg-edgers/ppa -y
+sudo apt-get update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get upgrade -y
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now it's time to install the CUDA toolkit (along with &lt;code&gt;nvidia-352&lt;/code&gt; drivers).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# This installs necessary headers.&lt;/span&gt;
+sudo apt-get install linux-source &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get install linux-headers-&lt;span class="k"&gt;$(&lt;/span&gt;uname -r&lt;span class="k"&gt;)&lt;/span&gt;
+
+&lt;span class="c1"&gt;# USE THE REAL PACKAGE NAME BELOW&lt;/span&gt;
+sudo dpkg -i cuda-repo-ubuntu1404-7-5-local_7.5-18_amd64.deb
+
+sudo apt-get install cuda
+sudo apt-get update
+sudo apt-get dist-upgrade -y
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Install bumblebee (to have switchable GPUs).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get install bumblebee bumblebee-nvidia virtualgl virtualgl-libs virtualgl-libs-ia32:i386 virtualgl-libs:i386
+sudo usermod -a -G bumblebee &lt;span class="nv"&gt;$USER&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Edit &lt;code&gt;/etc/bumblebee/bumblebee.conf&lt;/code&gt; as follows:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Change all occurences of &lt;code&gt;nvidia-current&lt;/code&gt; to &lt;code&gt;nvidia-352&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;After &lt;code&gt;Driver=&lt;/code&gt; insert &lt;code&gt;nvidia&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;After &lt;code&gt;KernelDriver=&lt;/code&gt; insert &lt;code&gt;nvidia-352&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;(if having trouble with optirun) uncomment the &lt;code&gt;BusID&lt;/code&gt; line and set it
+  accordingly to what the comment above this line says.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Make sure that these lines are in &lt;code&gt;/etc/modprobe.d/bumblebee.conf&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;blacklist nvidia-352
+blacklist nvidia-352-updates
+blacklist nvidia-experimental-352
+
+&lt;span class="nb"&gt;alias&lt;/span&gt; nvidia-uvm nvidia_352_uvm
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After &lt;code&gt;reboot&lt;/code&gt; everything should work fine. You can test it with:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;optirun glxspheres64
+&lt;span class="c1"&gt;# compare the performance with default GPU running the command above without optirun&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;If you need more help: &lt;a href="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/docs/sidebar/CUDA_Installation_Guide_Linux.pdf"&gt;CUDA installation guide for Linux&lt;/a&gt;&lt;/p&gt;</summary><category term="cuda"></category><category term="neural networks"></category></entry><entry><title>Setting up IPython with Git</title><link href="/setting-up-ipython-with-git.html" rel="alternate"></link><updated>2016-01-17T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:,2016-01-17:setting-up-ipython-with-git.html</id><summary type="html">&lt;p&gt;Since I've been annoyed by how IPython notebooks integrate with Git, I'd like
+to share a solution for this problem.&lt;/p&gt;
+&lt;p&gt;The description can be found here: &lt;a href="http://stackoverflow.com/a/25765194/1239545"&gt;http://stackoverflow.com/a/25765194/1239545&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;What it does is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;it adds a hook for saving the notebook, which also saves a &lt;em&gt;pure&lt;/em&gt; version&lt;/li&gt;
+&lt;li&gt;it suggests that you keep both the pure version and the notebook under version control&lt;/li&gt;
+&lt;/ul&gt;</summary></entry><entry><title>First post</title><link href="/first-post.html" rel="alternate"></link><updated>2016-01-16T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:,2016-01-16:first-post.html</id><summary type="html">&lt;p&gt;First post.&lt;/p&gt;</summary></entry></feed>
