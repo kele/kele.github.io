@@ -206,5 +206,13 @@ biblioteki standardowej na swojej oficjalnej stronie
 &lt;p&gt;VIM + &lt;a href="https://github.com/phildawes/racer"&gt;Racer&lt;/a&gt; +
 &lt;a href="https://github.com/racer-rust/vim-racer"&gt;vim-racer&lt;/a&gt;. Racer jest narzędziem do
 autouzupełniania dla Rusta.&lt;/p&gt;
+&lt;h2&gt;Stworzenie nowego projektu&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;cargo new --bin projekt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Powyższe polecenie stworzy szablon aplikacji wykonywalnej (&lt;code&gt;--bin&lt;/code&gt;) o nazwie
+&lt;code&gt;projekt&lt;/code&gt;. Co ciekawe, szablon ten zostanie stworzony wewnątrz nowego
+repozytorium Git.&lt;/p&gt;
 &lt;h1&gt;Koniec postu&lt;/h1&gt;
 &lt;p&gt;Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry></feed>
