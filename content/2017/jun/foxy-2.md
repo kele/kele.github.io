@@ -88,7 +88,7 @@ Jeśli udało się poprawnie zaakceptować połączenie, wywołajmy
 
 Jeśli nie - `panic!` z odpowiednim komunikatem o błędzie.
 
-### `match`
+### Pattern matching (`match`)
 `match` jest konstrukcją, która jest spotykana raczej w językach funkcyjnych
 (OCaml, Haskell, Lisp) niż w imperatywnych (C, Python, Java, C++), dlatego
 chciałbym poświęcić jej parę zdań.
