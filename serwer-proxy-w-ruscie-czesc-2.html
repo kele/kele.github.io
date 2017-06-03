@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+            <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+
+        <title>Serwer proxy w Ruscie (część 2)</title>
+
+            <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
+            <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
+
+        <!-- Bootstrap Core CSS -->
+        <link href="./theme/css/bootstrap.css" rel="stylesheet">
+
+        <!-- Custom CSS -->
+        <link href="./theme/css/clean-blog.css" rel="stylesheet">
+
+        <!-- Code highlight color scheme -->
+            <link href="./theme/css/code_blocks/darkly.css" rel="stylesheet">
+
+
+        <!-- Custom Fonts -->
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+
+
+
+        <meta name="tags" contents="rust" />
+        <meta name="tags" contents="foxy" />
+
+
+	                <meta property="og:locale" content="pl_PL.utf8">
+		<meta property="og:site_name" content="kele.github.io">
+
+	<meta property="og:type" content="article">
+	<meta property="article:author" content="">
+	<meta property="og:url" content="./serwer-proxy-w-ruscie-czesc-2.html">
+	<meta property="og:title" content="Serwer proxy w Ruscie (część 2)">
+	<meta property="og:description" content="">
+	<meta property="og:image" content="./">
+	<meta property="article:published_time" content="2017-06-03 00:00:00+02:00">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="./">kele.github.io</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+        <header class="intro-header" style="background-image: url('./theme/images/header.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Serwer proxy w Ruscie (część 2)</h1>
+                        <span class="meta">sob 03 czerwiec 2017</span>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+    <!-- Post Content -->
+    <article>
+        <h2>Posłuchajmy czegoś po TCP</h2>
+<p>Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):</p>
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">const</span><span class="w"> </span><span class="n">PROXY_PORT</span>: <span class="kt">u16</span> <span class="o">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">listener</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpListener</span>::<span class="n">bind</span><span class="p">((</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PROXY_PORT</span><span class="p">)).</span><span class="n">unwrap</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">match</span><span class="w"> </span><span class="n">listener</span><span class="p">.</span><span class="n">accept</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">((</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">))</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">handle_connection</span><span class="p">(</span><span class="n">sock</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">panic</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while accepting connection: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Opened connection: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tcp</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<h3>Nasłuchiwanie</h3>
+<p>Używać będziemy paczki (<strong>crate</strong>)
+<a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>. Robimy to za pomocą:</p>
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+
+
+<p>Użyjemy funkcji
+<a href="https://doc.rust-lang.org/std/net/struct.TcpListener.html"><code>std::net::TcpListener::bind</code></a>,
+żeby zacząć nasłuchiwać na porcie 4000 lokalnej maszyny:</p>
+<div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">PROXY_PORT</span>: <span class="kt">u16</span> <span class="o">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">;</span><span class="w"></span>
+<span class="kd">let</span><span class="w"> </span><span class="n">listener</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpListener</span>::<span class="n">bind</span><span class="p">((</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PROXY_PORT</span><span class="p">)).</span><span class="n">unwrap</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+
+
+<p><code>u16</code> to odpowiednik <code>uint16</code>, zatem <code>const PROXY_PORT: u16 = 4000;</code> jest po
+prostu deklaracją stałej <code>PROXY_PORT</code> typu liczba naturalnia 16-bitowa o
+wartości 4000.</p>
+<p>Czym jest tajemnicze <code>unwrap()</code> na końcu? Rust jest językiem nastawionym przede
+wszystkim na bezpieczeństwo, wymuszane już w czasie kompilacji. Na czym to
+dokładnie polega w tym przypadku? <code>bind()</code> mógłby zwyczajnie zwrócić
+<code>TcpListener</code>, jednak zamiast tego zwraca
+<a href="https://doc.rust-lang.org/std/io/type.Result.html"><code>std::io::Result&lt;TcpListener&gt;</code></a>.</p>
+<p>Co to za różnica?</p>
+<p>Coś po drodze może pójść nie tak (np. port może być już zajęty). Można radzić sobie z tym na różne sposoby:</p>
+<ul>
+<li>rzucając wyjątek (Java, C++?),</li>
+<li>zwracając wskaźnik (C, C++),</li>
+<li>zwracając dwie wartości <code>(TcpListener, bool)</code> (Go),</li>
+<li><a href="http://en.cppreference.com/w/cpp/utility/optional"><code>std::optional</code></a> (C++17).</li>
+</ul>
+<p>Rzucenie wyjątku nie wymusza na programiście obsłużenia go. Zwracanie wskaźnika
+czy wartości typu <code>bool</code> również. <code>std::optional</code> wystarczy ominąć prostym <code>*</code>.
+Rust idzie jednak inną drogą. Zamiast powyższych rozwiązań, zwracane jest
+opakowanie (<code>Result</code>), które może zawierać oczekiwaną przez nas
+wartość <code>TcpListener</code> lub błąd (<code>Error</code>)!</p>
+<p>W związku z tym, że rozpoczęcie
+nasłuchiwania na jakimś porcie jest kluczowe dla działania programu, jedyne co
+robię, to rozpakowuję wynik (<code>unwrap()</code>).</p>
+<p>Cóż robi ta tajemnicza metoda? Jeśli nie było błędu - zwraca wartość. Jeśli
+pojawił się błąd, wykonuje się
+<a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panic!</code></a> (odpowiednik
+<a href="https://blog.golang.org/defer-panic-and-recover"><code>panic</code></a> z Go).</p>
+<h3>Akceptowanie połączenia</h3>
+<div class="highlight"><pre><span></span><span class="k">match</span><span class="w"> </span><span class="n">listener</span><span class="p">.</span><span class="n">accept</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">((</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">))</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">handle_connection</span><span class="p">(</span><span class="n">sock</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">panic</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while accepting connection: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">),</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Jeśli udało się poprawnie zaakceptować połączenie, wywołajmy
+<code>handle_connection(sock)</code>, które zajmie się dalszą obsługą połączenia.</p>
+<p>Jeśli nie - <code>panic!</code> z odpowiednim komunikatem o błędzie.</p>
+<h3><code>match</code></h3>
+<p><code>match</code> jest konstrukcją, która jest spotykana raczej w językach funkcyjnych
+(OCaml, Haskell, Lisp) niż w imperatywnych (C, Python, Java, C++), dlatego
+chciałbym poświęcić jej parę zdań.</p>
+<p><a href="https://en.wikipedia.org/wiki/Pattern_matching"><strong>Pattern matching</strong></a>, bo tak
+nazywa się ta konstrukcja, służy do:</p>
+<ul>
+<li>sprawdzania, czy obiekt jest taki jak nam się wydaje (w powyższym przypadku,
+  czy to jest <code>Ok</code> (prawidłowa wartość) czy <code>Err</code> (błąd)),</li>
+<li>rozłożenia go na mniejsze porcje (<code>Ok</code> w powyższym przykładzie składa się z
+  dwóch cześci, pierwszą jest socket, drugą adres, adres ignoruję (poprzez <code>_</code>),
+  ale socket zapamiętuję jako <code>sock</code>),</li>
+</ul>
+<p>Przykładowo, gdbyśmy pisali kalkulator oparty na drzewach wyrażen
+arytmetycznych, pewna częśc kodu mogłaby wyglądać tak:</p>
+<div class="highlight"><pre><span></span><span class="k">match</span><span class="w"> </span><span class="n">expression</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Sub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Div</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Taka konstrukcja w językach programowania jest możliwa dzięki istnieniu
+specjalnych typów, które są alternatywą różnych wartości. Tzn. wyrażenie
+arytmetyczne może być dodawaniem, odejmowaniem, mnożeniem lub dzieleniem.
+Informacja o tym, czym właściwie jest dane wyrażenie, jest zapisywana i
+sprawdzana w czasie wykonania programu. To co jest ważne, to fakt, że kompilator
+wie, jakie są wszystkie możliwe alternatywy (i może nas ostrzec, gdy o którejś
+zapomnimy!). W C++ możnaby to symulować w taki sposób:</p>
+<div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">Type</span> <span class="p">{</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Sub</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Div</span> <span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">Expression</span> <span class="p">{</span>
+    <span class="n">Type</span> <span class="n">type</span><span class="p">;</span>
+    <span class="k">union</span> <span class="p">{</span>
+        <span class="n">Add</span> <span class="n">add</span><span class="p">;</span>
+        <span class="n">Sub</span> <span class="n">sub</span><span class="p">;</span>
+        <span class="n">Mul</span> <span class="n">mul</span><span class="p">;</span>
+        <span class="n">Div</span> <span class="n">div</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">expr</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">switch</span> <span class="n">expr</span><span class="p">.</span><span class="n">type</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">Type</span><span class="o">::</span><span class="nl">Add</span><span class="p">:</span> <span class="k">return</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">Type</span><span class="o">::</span><span class="nl">Sub</span><span class="p">:</span> <span class="k">return</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">Type</span><span class="o">::</span><span class="nl">Mul</span><span class="p">:</span> <span class="k">return</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">Type</span><span class="o">::</span><span class="nl">Div</span><span class="p">:</span> <span class="k">return</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">x</span> <span class="o">/</span> <span class="n">expr</span><span class="p">.</span><span class="n">add</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="k">break</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Jak widać, pattern matching jest dość wygodny. W językach, które go wspierają,
+implementacja jest na ogół wydajniejsza niż to co pokazałem powyżej w C++.
+Niestety, za mało jeszcze wiem o Ruscie, żeby wiedzieć jak wyglądają jego
+wewnętrzne mechanizmy w tym wypadku.</p>
+<h3><code>panic!</code> oraz <code>{}</code></h3>
+<p><code>panic!</code> jest makrem (na razie możemy traktować to jako funkcję, lecz <code>!</code> jest w
+Ruscie sygnałem, że w istocie jest to makro), które używane jest w przypadku
+krytycznych dla działania programu błędów.</p>
+<p><code>panic!</code> przyjmuje argumenty podobne do <code>printf</code> znanego z wielu innych języków,
+tyle tylko, że <code>{}</code> pozwala na wyświetlenie wartości dowolnego (no, nie do
+końca, ale o tym kiedy indziej) typu.</p>
+<h2>Co dalej?</h2>
+<p>W kolejnych postach planuję omówić:</p>
+<ul>
+<li>obsługę zapytań w różnych wątkach,</li>
+<li>semantykę własności i pożyczania (ownership and borrowing) (jest to główna
+  cecha wyróżniająca Rust na tle innych popularnych języków programowania),</li>
+<li>tworzenie włąsnych struktur,</li>
+<li>metody,</li>
+<li>implementacje cech (trait),</li>
+<li>wyrażenia i rozkazy (expressions and statements),</li>
+<li>i wiele innych.</li>
+</ul>
+    </article>
+
+    <hr>
+        <div class="comments">
+            <div id="disqus_thread"></div>
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http://kele.github.io/' + 'serwer-proxy-w-ruscie-czesc-2.html';
+                    this.page.identifier = 'disqus-' + 'serwer-proxy-w-ruscie-czesc-2.html';
+                };
+                (function() {  // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+                    s.src = 'https://kele-github-io.disqus.com/embed.js';
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <ul class="list-inline text-center">
+                    </ul>
+<p class="copyright text-muted">
+    Blog powered by <a href="http://getpelican.com">Pelican</a>,
+    which takes great advantage of <a href="http://python.org">Python</a>.
+</p>                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="./theme/js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="./theme/js/bootstrap.min.js"></script>
+
+        <!-- Custom Theme JavaScript -->
+        <script src="./theme/js/clean-blog.min.js"></script>
+
+
+    <!-- GitHub ribbon -->
+    <a href="https://github.com/kele/cifar_recognition"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/52760788cde945287fbb584134c4cbc2bc36f904/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"></a> 
+</body>
+
+</html>

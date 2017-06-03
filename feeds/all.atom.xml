@@ -1,5 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/all.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-03T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 1)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-1.html" rel="alternate"></link><published>2017-06-03T00:00:00+02:00</published><updated>2017-06-03T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-03:/serwer-proxy-w-ruscie-czesc-1.html</id><summary type="html">&lt;p&gt;Nauka Rusta na podstawie prostego serwera proxy.&lt;/p&gt;</summary><content type="html">&lt;h1&gt;O czym będzie ten projekt?&lt;/h1&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/all.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-03T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 2)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-2.html" rel="alternate"></link><published>2017-06-03T00:00:00+02:00</published><updated>2017-06-03T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-03:/serwer-proxy-w-ruscie-czesc-2.html</id><summary type="html">&lt;p&gt;Początkowy szkielet programu.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Posłuchajmy czegoś po TCP&lt;/h2&gt;
+&lt;p&gt;Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;net&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PROXY_PORT&lt;/span&gt;: &lt;span class="kt"&gt;u16&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4000&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpListener&lt;/span&gt;::&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PROXY_PORT&lt;/span&gt;&lt;span class="p"&gt;)).&lt;/span&gt;&lt;span class="n"&gt;unwrap&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;panic&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while accepting connection: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Opened connection: {:?}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;Nasłuchiwanie&lt;/h3&gt;
+&lt;p&gt;Używać będziemy paczki (&lt;strong&gt;crate&lt;/strong&gt;)
+&lt;a href="https://doc.rust-lang.org/std/net/"&gt;&lt;code&gt;std::net&lt;/code&gt;&lt;/a&gt;. Robimy to za pomocą:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;net&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Użyjemy funkcji
+&lt;a href="https://doc.rust-lang.org/std/net/struct.TcpListener.html"&gt;&lt;code&gt;std::net::TcpListener::bind&lt;/code&gt;&lt;/a&gt;,
+żeby zacząć nasłuchiwać na porcie 4000 lokalnej maszyny:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PROXY_PORT&lt;/span&gt;: &lt;span class="kt"&gt;u16&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4000&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpListener&lt;/span&gt;::&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PROXY_PORT&lt;/span&gt;&lt;span class="p"&gt;)).&lt;/span&gt;&lt;span class="n"&gt;unwrap&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;u16&lt;/code&gt; to odpowiednik &lt;code&gt;uint16&lt;/code&gt;, zatem &lt;code&gt;const PROXY_PORT: u16 = 4000;&lt;/code&gt; jest po
+prostu deklaracją stałej &lt;code&gt;PROXY_PORT&lt;/code&gt; typu liczba naturalnia 16-bitowa o
+wartości 4000.&lt;/p&gt;
+&lt;p&gt;Czym jest tajemnicze &lt;code&gt;unwrap()&lt;/code&gt; na końcu? Rust jest językiem nastawionym przede
+wszystkim na bezpieczeństwo, wymuszane już w czasie kompilacji. Na czym to
+dokładnie polega w tym przypadku? &lt;code&gt;bind()&lt;/code&gt; mógłby zwyczajnie zwrócić
+&lt;code&gt;TcpListener&lt;/code&gt;, jednak zamiast tego zwraca
+&lt;a href="https://doc.rust-lang.org/std/io/type.Result.html"&gt;&lt;code&gt;std::io::Result&amp;lt;TcpListener&amp;gt;&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Co to za różnica?&lt;/p&gt;
+&lt;p&gt;Coś po drodze może pójść nie tak (np. port może być już zajęty). Można radzić sobie z tym na różne sposoby:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;rzucając wyjątek (Java, C++?),&lt;/li&gt;
+&lt;li&gt;zwracając wskaźnik (C, C++),&lt;/li&gt;
+&lt;li&gt;zwracając dwie wartości &lt;code&gt;(TcpListener, bool)&lt;/code&gt; (Go),&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://en.cppreference.com/w/cpp/utility/optional"&gt;&lt;code&gt;std::optional&lt;/code&gt;&lt;/a&gt; (C++17).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Rzucenie wyjątku nie wymusza na programiście obsłużenia go. Zwracanie wskaźnika
+czy wartości typu &lt;code&gt;bool&lt;/code&gt; również. &lt;code&gt;std::optional&lt;/code&gt; wystarczy ominąć prostym &lt;code&gt;*&lt;/code&gt;.
+Rust idzie jednak inną drogą. Zamiast powyższych rozwiązań, zwracane jest
+opakowanie (&lt;code&gt;Result&lt;/code&gt;), które może zawierać oczekiwaną przez nas
+wartość &lt;code&gt;TcpListener&lt;/code&gt; lub błąd (&lt;code&gt;Error&lt;/code&gt;)!&lt;/p&gt;
+&lt;p&gt;W związku z tym, że rozpoczęcie
+nasłuchiwania na jakimś porcie jest kluczowe dla działania programu, jedyne co
+robię, to rozpakowuję wynik (&lt;code&gt;unwrap()&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;Cóż robi ta tajemnicza metoda? Jeśli nie było błędu - zwraca wartość. Jeśli
+pojawił się błąd, wykonuje się
+&lt;a href="https://doc.rust-lang.org/std/macro.panic.html"&gt;&lt;code&gt;panic!&lt;/code&gt;&lt;/a&gt; (odpowiednik
+&lt;a href="https://blog.golang.org/defer-panic-and-recover"&gt;&lt;code&gt;panic&lt;/code&gt;&lt;/a&gt; z Go).&lt;/p&gt;
+&lt;h3&gt;Akceptowanie połączenia&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;panic&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while accepting connection: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Jeśli udało się poprawnie zaakceptować połączenie, wywołajmy
+&lt;code&gt;handle_connection(sock)&lt;/code&gt;, które zajmie się dalszą obsługą połączenia.&lt;/p&gt;
+&lt;p&gt;Jeśli nie - &lt;code&gt;panic!&lt;/code&gt; z odpowiednim komunikatem o błędzie.&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;match&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;match&lt;/code&gt; jest konstrukcją, która jest spotykana raczej w językach funkcyjnych
+(OCaml, Haskell, Lisp) niż w imperatywnych (C, Python, Java, C++), dlatego
+chciałbym poświęcić jej parę zdań.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/Pattern_matching"&gt;&lt;strong&gt;Pattern matching&lt;/strong&gt;&lt;/a&gt;, bo tak
+nazywa się ta konstrukcja, służy do:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;sprawdzania, czy obiekt jest taki jak nam się wydaje (w powyższym przypadku,
+  czy to jest &lt;code&gt;Ok&lt;/code&gt; (prawidłowa wartość) czy &lt;code&gt;Err&lt;/code&gt; (błąd)),&lt;/li&gt;
+&lt;li&gt;rozłożenia go na mniejsze porcje (&lt;code&gt;Ok&lt;/code&gt; w powyższym przykładzie składa się z
+  dwóch cześci, pierwszą jest socket, drugą adres, adres ignoruję (poprzez &lt;code&gt;_&lt;/code&gt;),
+  ale socket zapamiętuję jako &lt;code&gt;sock&lt;/code&gt;),&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Przykładowo, gdbyśmy pisali kalkulator oparty na drzewach wyrażen
+arytmetycznych, pewna częśc kodu mogłaby wyglądać tak:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;expression&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Sub&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Mul&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Div&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Taka konstrukcja w językach programowania jest możliwa dzięki istnieniu
+specjalnych typów, które są alternatywą różnych wartości. Tzn. wyrażenie
+arytmetyczne może być dodawaniem, odejmowaniem, mnożeniem lub dzieleniem.
+Informacja o tym, czym właściwie jest dane wyrażenie, jest zapisywana i
+sprawdzana w czasie wykonania programu. To co jest ważne, to fakt, że kompilator
+wie, jakie są wszystkie możliwe alternatywy (i może nas ostrzec, gdy o którejś
+zapomnimy!). W C++ możnaby to symulować w taki sposób:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;enum&lt;/span&gt; &lt;span class="n"&gt;Type&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Sub&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Mul&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Div&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;Expression&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;Type&lt;/span&gt; &lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;union&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;Add&lt;/span&gt; &lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;Sub&lt;/span&gt; &lt;span class="n"&gt;sub&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;Mul&lt;/span&gt; &lt;span class="n"&gt;mul&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;Div&lt;/span&gt; &lt;span class="n"&gt;div&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="k"&gt;switch&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;type&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="n"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nl"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="n"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nl"&gt;Sub&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="n"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nl"&gt;Mul&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="n"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nl"&gt;Div&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;expr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Jak widać, pattern matching jest dość wygodny. W językach, które go wspierają,
+implementacja jest na ogół wydajniejsza niż to co pokazałem powyżej w C++.
+Niestety, za mało jeszcze wiem o Ruscie, żeby wiedzieć jak wyglądają jego
+wewnętrzne mechanizmy w tym wypadku.&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;panic!&lt;/code&gt; oraz &lt;code&gt;{}&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;panic!&lt;/code&gt; jest makrem (na razie możemy traktować to jako funkcję, lecz &lt;code&gt;!&lt;/code&gt; jest w
+Ruscie sygnałem, że w istocie jest to makro), które używane jest w przypadku
+krytycznych dla działania programu błędów.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;panic!&lt;/code&gt; przyjmuje argumenty podobne do &lt;code&gt;printf&lt;/code&gt; znanego z wielu innych języków,
+tyle tylko, że &lt;code&gt;{}&lt;/code&gt; pozwala na wyświetlenie wartości dowolnego (no, nie do
+końca, ale o tym kiedy indziej) typu.&lt;/p&gt;
+&lt;h2&gt;Co dalej?&lt;/h2&gt;
+&lt;p&gt;W kolejnych postach planuję omówić:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;obsługę zapytań w różnych wątkach,&lt;/li&gt;
+&lt;li&gt;semantykę własności i pożyczania (ownership and borrowing) (jest to główna
+  cecha wyróżniająca Rust na tle innych popularnych języków programowania),&lt;/li&gt;
+&lt;li&gt;tworzenie włąsnych struktur,&lt;/li&gt;
+&lt;li&gt;metody,&lt;/li&gt;
+&lt;li&gt;implementacje cech (trait),&lt;/li&gt;
+&lt;li&gt;wyrażenia i rozkazy (expressions and statements),&lt;/li&gt;
+&lt;li&gt;i wiele innych.&lt;/li&gt;
+&lt;/ul&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Serwer proxy w Ruscie (część 1)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-1.html" rel="alternate"></link><published>2017-06-02T00:00:00+02:00</published><updated>2017-06-02T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-02:/serwer-proxy-w-ruscie-czesc-1.html</id><summary type="html">&lt;p&gt;Nauka Rusta na podstawie prostego serwera proxy.&lt;/p&gt;</summary><content type="html">&lt;h1&gt;O czym będzie ten projekt?&lt;/h1&gt;
 &lt;h2&gt;Motywacja&lt;/h2&gt;
 &lt;p&gt;Jestem człowiekiem, który stale się czymś rozprasza. Często odwiedzam strony dla
 programistów czy ludzi związanych ze startupami (m.in. Hacker News, lobste.rs),
@@ -56,7 +205,7 @@ biblioteki standardowej na swojej oficjalnej stronie
 &lt;a href="https://github.com/racer-rust/vim-racer"&gt;vim-racer&lt;/a&gt;. Racer jest narzędziem do
 autouzupełniania dla Rusta.&lt;/p&gt;
 &lt;h1&gt;Koniec postu&lt;/h1&gt;
-&lt;p&gt;Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Blog po polsku (blog in Polish)</title><link href="http://kele.github.io/blog-po-polsku-blog-in-polish.html" rel="alternate"></link><published>2017-06-02T00:00:00+02:00</published><updated>2017-06-02T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-02:/blog-po-polsku-blog-in-polish.html</id><summary type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
+&lt;p&gt;Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Blog po polsku (blog in Polish)</title><link href="http://kele.github.io/blog-po-polsku-blog-in-polish.html" rel="alternate"></link><published>2017-06-01T00:00:00+02:00</published><updated>2017-06-01T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-01:/blog-po-polsku-blog-in-polish.html</id><summary type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
 &lt;h4&gt;Od dziś, blog będzie prowadzony wyłącznie po polsku.&lt;/h4&gt;
 &lt;h4&gt;Plany na najbliższą przyszłość: http proxy napisane w Ruscie.&lt;/h4&gt;</summary><content type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
 &lt;h4&gt;Od dziś, blog będzie prowadzony wyłącznie po polsku.&lt;/h4&gt;
