@@ -68,3 +68,6 @@ biblioteki standardowej na swojej oficjalnej stronie
 VIM + [Racer](https://github.com/phildawes/racer) +
 [vim-racer](https://github.com/racer-rust/vim-racer). Racer jest narzędziem do
 autouzupełniania dla Rusta.
+
+# Koniec postu
+Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)
