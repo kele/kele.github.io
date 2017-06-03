@@ -76,7 +76,7 @@ pojawił się błąd, wykonuje się
 &lt;p&gt;Jeśli udało się poprawnie zaakceptować połączenie, wywołajmy
 &lt;code&gt;handle_connection(sock)&lt;/code&gt;, które zajmie się dalszą obsługą połączenia.&lt;/p&gt;
 &lt;p&gt;Jeśli nie - &lt;code&gt;panic!&lt;/code&gt; z odpowiednim komunikatem o błędzie.&lt;/p&gt;
-&lt;h3&gt;&lt;code&gt;match&lt;/code&gt;&lt;/h3&gt;
+&lt;h3&gt;Pattern matching (&lt;code&gt;match&lt;/code&gt;)&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;match&lt;/code&gt; jest konstrukcją, która jest spotykana raczej w językach funkcyjnych
 (OCaml, Haskell, Lisp) niż w imperatywnych (C, Python, Java, C++), dlatego
 chciałbym poświęcić jej parę zdań.&lt;/p&gt;
