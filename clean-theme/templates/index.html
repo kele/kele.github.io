@@ -33,7 +33,7 @@
                 </h2>
             </a>
             {% if article.summary %}
-                {{ article.summary|truncate(140)|striptags }}
+                {{ article.summary|truncate(200)|striptags }}
             {% endif %}
             <p class="post-meta">{{ article.locale_date }}</p>
             {% include 'comments.html' %}

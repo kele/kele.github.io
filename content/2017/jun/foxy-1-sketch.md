@@ -2,6 +2,7 @@ Title: Serwer proxy w Ruscie (część 1)
 Date: 2017-06-03
 Category: rust
 Tags: rust, foxy
+Summary: Nauka Rusta na podstawie prostego serwera proxy.
 
 
 # O czym będzie ten projekt?
