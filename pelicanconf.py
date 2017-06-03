@@ -10,8 +10,8 @@ PATH = 'content'
 
 TIMEZONE = 'Europe/Warsaw'
 
-DEFAULT_LANG = 'en'
-LOCALE = ('en_US.utf8')
+DEFAULT_LANG = 'pl'
+LOCALE = ('pl_PL.utf8')
 
 THEME = './clean-theme'
 
