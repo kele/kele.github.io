@@ -56,6 +56,7 @@ zainstalować, jeśli nie korzystacie z rustup.rs.&lt;/p&gt;
 &lt;p&gt;Rust ma solidny zbiór materiałów do nauki wraz z dokumentacją języka i
 biblioteki standardowej na swojej oficjalnej stronie
 &lt;a href="https://www.rust-lang.org/"&gt;rust-lang.org&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;Środowisko&lt;/h2&gt;
-&lt;p&gt;Moje: VIM + &lt;a href="https://github.com/phildawes/racer"&gt;Racer&lt;/a&gt; +
-&lt;a href="https://github.com/racer-rust/vim-racer"&gt;vim-racer&lt;/a&gt;.&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry></feed>
+&lt;h2&gt;Moje środowisko&lt;/h2&gt;
+&lt;p&gt;VIM + &lt;a href="https://github.com/phildawes/racer"&gt;Racer&lt;/a&gt; +
+&lt;a href="https://github.com/racer-rust/vim-racer"&gt;vim-racer&lt;/a&gt;. Racer jest narzędziem do
+autouzupełniania dla Rusta.&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry></feed>
