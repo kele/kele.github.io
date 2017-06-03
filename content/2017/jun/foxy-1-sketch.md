@@ -13,7 +13,7 @@ programistów czy ludzi związanych ze startupami (m.in. Hacker News, lobste.rs)
 nawet jeśli nie bardzo mam czas poczytać artykuły, które tam są linkowane. Jak
 się można domyślać, niezbyt pomaga to w produktywnej pracy. Nie mam żadnego
 problemu, kiedy jestem mocno zajęty, ale jeśli mam 2-3 minuty, bo coś mi się
-kompiluje/mój map-reduce sie jeszcze nie skończył/czekam na odpowiedź od
+kompiluje/mój map-reduce się jeszcze nie skończył/czekam na odpowiedź od
 kogoś/cokolwiek, to moim naturalnym odruchem jest przejrzenie wszystkich,
 chociaż trochę interesujących mnie stron.
 
