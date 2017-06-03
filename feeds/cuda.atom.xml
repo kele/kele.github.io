@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/cuda.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2016-01-18T00:00:00+01:00</updated><entry><title>Getting CUDA working on a laptop with two GPUs</title><link href="http://kele.github.io/getting-cuda-working-on-a-laptop-with-two-gpus.html" rel="alternate"></link><updated>2016-01-18T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2016-01-18:getting-cuda-working-on-a-laptop-with-two-gpus.html</id><summary type="html">&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - cuda</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/cuda.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2016-01-18T00:00:00+01:00</updated><entry><title>Getting CUDA working on a laptop with two GPUs</title><link href="http://kele.github.io/getting-cuda-working-on-a-laptop-with-two-gpus.html" rel="alternate"></link><published>2016-01-18T00:00:00+01:00</published><updated>2016-01-18T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2016-01-18:/getting-cuda-working-on-a-laptop-with-two-gpus.html</id><summary type="html">&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
+14.04. These steps might actually help somebody.&lt;/p&gt;
+&lt;p&gt;First, download the &lt;a href="http://developer.nvidia.com/cuda-downloads"&gt;NVIDIA CUDA Toolkit&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Remove all old NVIDIA-related drivers:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get remove --purge nvidia*
+sudo apt-get --purge remove xserver-xorg-video-nouveau
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Backup your &lt;code&gt;/etc/modprobe.d …&lt;/code&gt;&lt;/p&gt;</summary><content type="html">&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
 14.04. These steps might actually help somebody.&lt;/p&gt;
 &lt;p&gt;First, download the &lt;a href="http://developer.nvidia.com/cuda-downloads"&gt;NVIDIA CUDA Toolkit&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Remove all old NVIDIA-related drivers:&lt;/p&gt;
@@ -19,7 +28,7 @@ blacklist nvidia-96-updates
 &lt;span class="nb"&gt;alias&lt;/span&gt; nvidia nvidia_current_updates
 &lt;span class="nb"&gt;alias&lt;/span&gt; nouveau off
 &lt;span class="nb"&gt;alias&lt;/span&gt; lbm-nouveau off
-options nouveau &lt;span class="nv"&gt;modeset&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0
+options nouveau &lt;span class="nv"&gt;modeset&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -72,4 +81,4 @@ blacklist nvidia-experimental-352
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;If you need more help: &lt;a href="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/docs/sidebar/CUDA_Installation_Guide_Linux.pdf"&gt;CUDA installation guide for Linux&lt;/a&gt;&lt;/p&gt;</summary><category term="cuda"></category><category term="neural networks"></category></entry></feed>
+&lt;p&gt;If you need more help: &lt;a href="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/docs/sidebar/CUDA_Installation_Guide_Linux.pdf"&gt;CUDA installation guide for Linux&lt;/a&gt;&lt;/p&gt;</content><category term="cuda"></category><category term="neural networks"></category></entry></feed>

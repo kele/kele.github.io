@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/cifar.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2016-01-25T00:00:00+01:00</updated><entry><title>Using Lasagne to achieve over 75% accuracy on CIFAR10.</title><link href="http://kele.github.io/using-lasagne-to-achieve-over-75-accuracy-on-cifar10.html" rel="alternate"></link><updated>2016-01-25T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2016-01-25:using-lasagne-to-achieve-over-75-accuracy-on-cifar10.html</id><summary type="html">&lt;p&gt;This is the first report of my battle with the &lt;a href="https://www.cs.toronto.edu/~kriz/cifar.html"&gt;CIFAR10
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - cifar</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/cifar.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2016-01-25T00:00:00+01:00</updated><entry><title>Using Lasagne to achieve over 75% accuracy on CIFAR10.</title><link href="http://kele.github.io/using-lasagne-to-achieve-over-75-accuracy-on-cifar10.html" rel="alternate"></link><published>2016-01-25T00:00:00+01:00</published><updated>2016-01-25T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2016-01-25:/using-lasagne-to-achieve-over-75-accuracy-on-cifar10.html</id><summary type="html">&lt;p&gt;This is the first report of my battle with the &lt;a href="https://www.cs.toronto.edu/~kriz/cifar.html"&gt;CIFAR10
+classification&lt;/a&gt; problem.&lt;/p&gt;
+&lt;p&gt;I've decided to use &lt;a href="http://lasagne.readthedocs.org/en/latest/"&gt;Lasagne&lt;/a&gt; which
+is a ligthweight library build on top of
+&lt;a href="http://deeplearning.net/software/theano/"&gt;Theano&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Here's the source code I'll be talking about in this post:
+&lt;a href="https://github.com/kele/cifar_recognition/tree/over75"&gt;link&lt;/a&gt;.&lt;/p&gt;
+&lt;h1&gt;Overview&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;I don't do any data augmentation.&lt;/li&gt;
+&lt;li&gt;This piece of …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;This is the first report of my battle with the &lt;a href="https://www.cs.toronto.edu/~kriz/cifar.html"&gt;CIFAR10
 classification&lt;/a&gt; problem.&lt;/p&gt;
 &lt;p&gt;I've decided to use &lt;a href="http://lasagne.readthedocs.org/en/latest/"&gt;Lasagne&lt;/a&gt; which
 is a ligthweight library build on top of
@@ -64,4 +74,4 @@ that as the last step, after picking a good network architecture.&lt;/p&gt;
 &lt;li&gt;cropping the image at random&lt;/li&gt;
 &lt;li&gt;horizontal flip&lt;/li&gt;
 &lt;li&gt;rescaling&lt;/li&gt;
-&lt;/ul&gt;</summary><category term="neural networks"></category><category term="cifar"></category></entry></feed>
+&lt;/ul&gt;</content><category term="neural networks"></category><category term="cifar"></category></entry></feed>
