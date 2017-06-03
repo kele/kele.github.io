@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-03T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 1)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-1.html" rel="alternate"></link><published>2017-06-03T00:00:00+02:00</published><updated>2017-06-03T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-03:/serwer-proxy-w-ruscie-czesc-1.html</id><summary type="html">&lt;h1&gt;O czym będzie ten projekt?&lt;/h1&gt;
-&lt;h2&gt;Motywacja&lt;/h2&gt;
-&lt;p&gt;Jestem człowiekiem, który stale się czymś rozprasza. Często odwiedzam strony dla
-programistów czy ludzi związanych ze startupami (m.in. Hacker News, lobste.rs),
-nawet jeśli nie bardzo mam czas poczytać artykuły, które tam są linkowane. Jak
-się można domyślać, niezbyt pomaga to w produktywnej …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;O czym będzie ten projekt?&lt;/h1&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-03T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 1)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-1.html" rel="alternate"></link><published>2017-06-03T00:00:00+02:00</published><updated>2017-06-03T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-03:/serwer-proxy-w-ruscie-czesc-1.html</id><summary type="html">&lt;p&gt;Nauka Rusta na podstawie prostego serwera proxy.&lt;/p&gt;</summary><content type="html">&lt;h1&gt;O czym będzie ten projekt?&lt;/h1&gt;
 &lt;h2&gt;Motywacja&lt;/h2&gt;
 &lt;p&gt;Jestem człowiekiem, który stale się czymś rozprasza. Często odwiedzam strony dla
 programistów czy ludzi związanych ze startupami (m.in. Hacker News, lobste.rs),
