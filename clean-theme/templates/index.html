@@ -35,11 +35,11 @@
             {% if article.summary %}
                 {{ article.summary|truncate(140)|striptags }}
             {% endif %}
-            <p class="post-meta">Posted by
+            <p class="post-meta">Post napisany przez
                 {% for author in article.authors %}
                     <a href="{{ SITEURL }}/{{ author.url }}">{{ author }}</a>
                 {% endfor %}
-                 on {{ article.locale_date }}
+                - opublikowano {{ article.locale_date }}
             </p>
             {% include 'comments.html' %}
         </div>
