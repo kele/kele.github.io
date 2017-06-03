@@ -1,9 +1,9 @@
-Title: Blog po polsku (blog in polish)
+Title: Blog po polsku (blog in Polish)
 Date: 2017-06-03
 Category: meta
 Tags: meta, polski
 
-Starting from this post, the blog is going to be in polish language only.
+Starting from this post, the blog is going to be in Polish language only.
 
 Od dziś, blog będzie prowadzony wyłącznie po polsku.
 
