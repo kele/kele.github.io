@@ -70,5 +70,13 @@ VIM + [Racer](https://github.com/phildawes/racer) +
 [vim-racer](https://github.com/racer-rust/vim-racer). Racer jest narzędziem do
 autouzupełniania dla Rusta.
 
+## Stworzenie nowego projektu
+    ::bash
+    cargo new --bin projekt
+
+Powyższe polecenie stworzy szablon aplikacji wykonywalnej (`--bin`) o nazwie
+`projekt`. Co ciekawe, szablon ten zostanie stworzony wewnątrz nowego
+repozytorium Git.
+
 # Koniec postu
 Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)
