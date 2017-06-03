@@ -46,7 +46,7 @@ kompletnie zagubiony. ;)&lt;/p&gt;
 &lt;li&gt;Materiały o Ruscie widzę głównie po angielsku, więc może warto?&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h1&gt;Przygotowania&lt;/h1&gt;
-&lt;h2&gt;Kompilator i środowisko&lt;/h2&gt;
+&lt;h2&gt;Kompilator&lt;/h2&gt;
 &lt;p&gt;Instalacja jest dziecinnie prosta: &lt;a href="https://rustup.rs/"&gt;rustup.rs&lt;/a&gt;. Część
 dystrybucji będzie miała też Rusta w swoich repozytoriach.&lt;/p&gt;
 &lt;p&gt;Dla wygody, większość operacji (tworzenie projektów, kompilacja, uruchamianie
@@ -56,108 +56,9 @@ zainstalować, jeśli nie korzystacie z rustup.rs.&lt;/p&gt;
 &lt;p&gt;Rust ma solidny zbiór materiałów do nauki wraz z dokumentacją języka i
 biblioteki standardowej na swojej oficjalnej stronie
 &lt;a href="https://www.rust-lang.org/"&gt;rust-lang.org&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
-14.04. These steps might actually help somebody.&lt;/p&gt;
-&lt;p&gt;First, download the &lt;a href="http://developer.nvidia.com/cuda-downloads"&gt;NVIDIA CUDA Toolkit&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Remove all old NVIDIA-related drivers:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;net&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-
-&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PROXY_PORT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;:&lt;span class="kt"&gt;u16&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4000&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-
-&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpListener&lt;/span&gt;::&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PROXY_PORT&lt;/span&gt;&lt;span class="p"&gt;)).&lt;/span&gt;&lt;span class="n"&gt;unwrap&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;panic&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while accepting connection: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-
-
-&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while getting http request: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Got: {:?}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;to_string&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpResponse&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;status&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;OK&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;to_packet&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Backup your &lt;code&gt;/etc/modprobe.d/blacklist.conf&lt;/code&gt; and make sure it contains these lines:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;blacklist nouveau
-blacklist lbm-nouveau
-blacklist nvidia-173
-blacklist nvidia-96
-blacklist nvidia-current
-blacklist nvidia-173-updates
-blacklist nvidia-96-updates
-&lt;span class="nb"&gt;alias&lt;/span&gt; nvidia nvidia_current_updates
-&lt;span class="nb"&gt;alias&lt;/span&gt; nouveau off
-&lt;span class="nb"&gt;alias&lt;/span&gt; lbm-nouveau off
-options nouveau &lt;span class="nv"&gt;modeset&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Add bumblebee and xorg-edgers repositories:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-add-repository ppa:bumblebee/stable -y
-sudo add-apt-repository ppa:xorg-edgers/ppa -y
-sudo apt-get update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get upgrade -y
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Now it's time to install the CUDA toolkit (along with &lt;code&gt;nvidia-352&lt;/code&gt; drivers).&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# This installs necessary headers.&lt;/span&gt;
-sudo apt-get install linux-source &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get install linux-headers-&lt;span class="k"&gt;$(&lt;/span&gt;uname -r&lt;span class="k"&gt;)&lt;/span&gt;
-
-&lt;span class="c1"&gt;# USE THE REAL PACKAGE NAME BELOW&lt;/span&gt;
-sudo dpkg -i cuda-repo-ubuntu1404-7-5-local_7.5-18_amd64.deb
-
-sudo apt-get install cuda
-sudo apt-get update
-sudo apt-get dist-upgrade -y
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Install bumblebee (to have switchable GPUs).&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get install bumblebee bumblebee-nvidia virtualgl virtualgl-libs virtualgl-libs-ia32:i386 virtualgl-libs:i386
-sudo usermod -a -G bumblebee &lt;span class="nv"&gt;$USER&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Edit &lt;code&gt;/etc/bumblebee/bumblebee.conf&lt;/code&gt; as follows:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Change all occurences of &lt;code&gt;nvidia-current&lt;/code&gt; to &lt;code&gt;nvidia-352&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;After &lt;code&gt;Driver=&lt;/code&gt; insert &lt;code&gt;nvidia&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;After &lt;code&gt;KernelDriver=&lt;/code&gt; insert &lt;code&gt;nvidia-352&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;(if having trouble with optirun) uncomment the &lt;code&gt;BusID&lt;/code&gt; line and set it
-  accordingly to what the comment above this line says.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Make sure that these lines are in &lt;code&gt;/etc/modprobe.d/bumblebee.conf&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;blacklist nvidia-352
-blacklist nvidia-352-updates
-blacklist nvidia-experimental-352
-
-&lt;span class="nb"&gt;alias&lt;/span&gt; nvidia-uvm nvidia_352_uvm
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;After &lt;code&gt;reboot&lt;/code&gt; everything should work fine. You can test it with:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;optirun glxspheres64
-&lt;span class="c1"&gt;# compare the performance with default GPU running the command above without optirun&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;If you need more help: &lt;a href="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/docs/sidebar/CUDA_Installation_Guide_Linux.pdf"&gt;CUDA installation guide for Linux&lt;/a&gt;&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Blog po polsku (blog in Polish)</title><link href="http://kele.github.io/blog-po-polsku-blog-in-polish.html" rel="alternate"></link><published>2017-06-02T00:00:00+02:00</published><updated>2017-06-02T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-02:/blog-po-polsku-blog-in-polish.html</id><summary type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
+&lt;h2&gt;Środowisko&lt;/h2&gt;
+&lt;p&gt;Moje: VIM + &lt;a href="https://github.com/phildawes/racer"&gt;Racer&lt;/a&gt; +
+&lt;a href="https://github.com/racer-rust/vim-racer"&gt;vim-racer&lt;/a&gt;.&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Blog po polsku (blog in Polish)</title><link href="http://kele.github.io/blog-po-polsku-blog-in-polish.html" rel="alternate"></link><published>2017-06-02T00:00:00+02:00</published><updated>2017-06-02T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-02:/blog-po-polsku-blog-in-polish.html</id><summary type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
 &lt;h4&gt;Od dziś, blog będzie prowadzony wyłącznie po polsku.&lt;/h4&gt;
 &lt;h4&gt;Plany na najbliższą przyszłość: http proxy napisane w Ruscie.&lt;/h4&gt;</summary><content type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
 &lt;h4&gt;Od dziś, blog będzie prowadzony wyłącznie po polsku.&lt;/h4&gt;

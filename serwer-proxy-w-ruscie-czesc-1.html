@@ -148,7 +148,7 @@ kompletnie zagubiony. ;)</p>
 <li>Materiały o Ruscie widzę głównie po angielsku, więc może warto?</li>
 </ol>
 <h1>Przygotowania</h1>
-<h2>Kompilator i środowisko</h2>
+<h2>Kompilator</h2>
 <p>Instalacja jest dziecinnie prosta: <a href="https://rustup.rs/">rustup.rs</a>. Część
 dystrybucji będzie miała też Rusta w swoich repozytoriach.</p>
 <p>Dla wygody, większość operacji (tworzenie projektów, kompilacja, uruchamianie
@@ -158,108 +158,9 @@ zainstalować, jeśli nie korzystacie z rustup.rs.</p>
 <p>Rust ma solidny zbiór materiałów do nauki wraz z dokumentacją języka i
 biblioteki standardowej na swojej oficjalnej stronie
 <a href="https://www.rust-lang.org/">rust-lang.org</a>.</p>
-<p>I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
-14.04. These steps might actually help somebody.</p>
-<p>First, download the <a href="http://developer.nvidia.com/cuda-downloads">NVIDIA CUDA Toolkit</a>.</p>
-<p>Remove all old NVIDIA-related drivers:</p>
-<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
-
-<span class="k">const</span><span class="w"> </span><span class="n">PROXY_PORT</span><span class="w"> </span>:<span class="kt">u16</span> <span class="o">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">;</span><span class="w"></span>
-
-<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">listener</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpListener</span>::<span class="n">bind</span><span class="p">((</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PROXY_PORT</span><span class="p">)).</span><span class="n">unwrap</span><span class="p">();</span><span class="w"></span>
-
-<span class="w">    </span><span class="k">match</span><span class="w"> </span><span class="n">listener</span><span class="p">.</span><span class="n">accept</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="nb">Ok</span><span class="p">((</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">))</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">handle_connection</span><span class="p">(</span><span class="n">sock</span><span class="p">),</span><span class="w"></span>
-<span class="w">        </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">panic</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while accepting connection: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">),</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-
-
-<span class="k">mod</span> <span class="nn">http</span><span class="p">;</span><span class="w"></span>
-<span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span>::<span class="n">HttpStream</span>::<span class="n">new</span><span class="p">(</span><span class="n">tcp</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="o">!</span><span class="n">h</span><span class="p">.</span><span class="n">is_closed</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
-<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while getting http request: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"></span>
-<span class="w">            </span><span class="p">},</span><span class="w"></span>
-<span class="w">        </span><span class="p">};</span><span class="w"></span>
-<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Got: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="n">to_string</span><span class="p">());</span><span class="w"></span>
-<span class="w">        </span><span class="n">h</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">http</span>::<span class="n">HttpResponse</span>::<span class="n">new</span><span class="p">().</span><span class="n">status</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;OK&quot;</span><span class="p">).</span><span class="n">build</span><span class="p">().</span><span class="n">to_packet</span><span class="p">());</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</pre></div>
-
-
-<p>Backup your <code>/etc/modprobe.d/blacklist.conf</code> and make sure it contains these lines:</p>
-<div class="highlight"><pre><span></span>blacklist nouveau
-blacklist lbm-nouveau
-blacklist nvidia-173
-blacklist nvidia-96
-blacklist nvidia-current
-blacklist nvidia-173-updates
-blacklist nvidia-96-updates
-<span class="nb">alias</span> nvidia nvidia_current_updates
-<span class="nb">alias</span> nouveau off
-<span class="nb">alias</span> lbm-nouveau off
-options nouveau <span class="nv">modeset</span><span class="o">=</span><span class="m">0</span>
-</pre></div>
-
-
-<p>Add bumblebee and xorg-edgers repositories:</p>
-<div class="highlight"><pre><span></span>sudo apt-add-repository ppa:bumblebee/stable -y
-sudo add-apt-repository ppa:xorg-edgers/ppa -y
-sudo apt-get update <span class="o">&amp;&amp;</span> sudo apt-get upgrade -y
-</pre></div>
-
-
-<p>Now it's time to install the CUDA toolkit (along with <code>nvidia-352</code> drivers).</p>
-<div class="highlight"><pre><span></span><span class="c1"># This installs necessary headers.</span>
-sudo apt-get install linux-source <span class="o">&amp;&amp;</span> sudo apt-get install linux-headers-<span class="k">$(</span>uname -r<span class="k">)</span>
-
-<span class="c1"># USE THE REAL PACKAGE NAME BELOW</span>
-sudo dpkg -i cuda-repo-ubuntu1404-7-5-local_7.5-18_amd64.deb
-
-sudo apt-get install cuda
-sudo apt-get update
-sudo apt-get dist-upgrade -y
-</pre></div>
-
-
-<p>Install bumblebee (to have switchable GPUs).</p>
-<div class="highlight"><pre><span></span>sudo apt-get install bumblebee bumblebee-nvidia virtualgl virtualgl-libs virtualgl-libs-ia32:i386 virtualgl-libs:i386
-sudo usermod -a -G bumblebee <span class="nv">$USER</span>
-</pre></div>
-
-
-<p>Edit <code>/etc/bumblebee/bumblebee.conf</code> as follows:</p>
-<ul>
-<li>Change all occurences of <code>nvidia-current</code> to <code>nvidia-352</code></li>
-<li>After <code>Driver=</code> insert <code>nvidia</code></li>
-<li>After <code>KernelDriver=</code> insert <code>nvidia-352</code></li>
-<li>(if having trouble with optirun) uncomment the <code>BusID</code> line and set it
-  accordingly to what the comment above this line says.</li>
-</ul>
-<p>Make sure that these lines are in <code>/etc/modprobe.d/bumblebee.conf</code>:</p>
-<div class="highlight"><pre><span></span>blacklist nvidia-352
-blacklist nvidia-352-updates
-blacklist nvidia-experimental-352
-
-<span class="nb">alias</span> nvidia-uvm nvidia_352_uvm
-</pre></div>
-
-
-<p>After <code>reboot</code> everything should work fine. You can test it with:</p>
-<div class="highlight"><pre><span></span>optirun glxspheres64
-<span class="c1"># compare the performance with default GPU running the command above without optirun</span>
-</pre></div>
-
-
-<p>If you need more help: <a href="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/docs/sidebar/CUDA_Installation_Guide_Linux.pdf">CUDA installation guide for Linux</a></p>
+<h2>Środowisko</h2>
+<p>Moje: VIM + <a href="https://github.com/phildawes/racer">Racer</a> +
+<a href="https://github.com/racer-rust/vim-racer">vim-racer</a>.</p>
     </article>
 
         <div class="tags">
