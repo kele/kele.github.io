@@ -1,5 +1,5 @@
 Title: Blog po polsku (blog in Polish)
-Date: 2017-06-02
+Date: 2017-06-01
 Category: meta
 Tags: meta, polski
 
