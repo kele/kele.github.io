@@ -78,5 +78,8 @@ Powyższe polecenie stworzy szablon aplikacji wykonywalnej (`--bin`) o nazwie
 `projekt`. Co ciekawe, szablon ten zostanie stworzony wewnątrz nowego
 repozytorium Git (miły gest ;)).
 
+Projekt budujemy przy pomocy `cargo build`. Początkowo, `cargo` tworzy nam znane
+Hello World.
+
 # Koniec postu
 Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)
