@@ -1,5 +1,284 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/all.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-03T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 2)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-2.html" rel="alternate"></link><published>2017-06-03T00:00:00+02:00</published><updated>2017-06-03T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-03:/serwer-proxy-w-ruscie-czesc-2.html</id><summary type="html">&lt;p&gt;Początkowy szkielet programu.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Posłuchajmy czegoś po TCP&lt;/h2&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/all.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-04T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 3)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-3.html" rel="alternate"></link><published>2017-06-04T00:00:00+02:00</published><updated>2017-06-04T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-04:/serwer-proxy-w-ruscie-czesc-3.html</id><summary type="html">&lt;p&gt;Model własności (ownership and borrowing), struktury, metody - szkielet echo serwera HTTP.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Obsługa protokołu HTTP&lt;/h2&gt;
+&lt;p&gt;Rust ma w miarę dojrzałą bibliotekę do obsługi protokołu HTTP - jest nią
+&lt;a href="https://github.com/hyperium/hyper"&gt;&lt;strong&gt;hyper&lt;/strong&gt;&lt;/a&gt;. Biblioteka ta jest używana m.in.
+przez &lt;a href="https://github.com/servo/servo"&gt;&lt;strong&gt;Servo&lt;/strong&gt;&lt;/a&gt;, czyli prawdopodobnie
+najpoważniejszy projekt pisany w Ruscie w tej chwili.&lt;/p&gt;
+&lt;p&gt;Jednak w ramach nauki, napiszę swój własny, prosty moduł do obsługi HTTP.&lt;/p&gt;
+&lt;h2&gt;Tworzenie nowego modułu&lt;/h2&gt;
+&lt;p&gt;W Ruscie kod organizowany jest w paczkach (&lt;strong&gt;crate&lt;/strong&gt;), a wewnątrz nich w
+modułach. Paczki możemy porównać do bibliotek w innych językach. Każda paczka ma
+swój główny moduł (&lt;strong&gt;root module&lt;/strong&gt;), a jego potomkami mogą być inne moduły.&lt;/p&gt;
+&lt;p&gt;Aby użyć modułu, musimy go zadeklarować:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a name="backref-1"&gt;&lt;/a&gt;
+Rust&lt;sup&gt;&lt;a href="#rust-i-cargo"&gt;1&lt;/a&gt;&lt;/sup&gt; wtedy będzie się spodziewać pliku &lt;code&gt;http.rs&lt;/code&gt;
+lub &lt;code&gt;http/mod.rs&lt;/code&gt;. Tam też musimy zdefiniować nasz kod.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Słowo kluczowe &lt;code&gt;struct&lt;/code&gt; pozwala na zdefiniowanie nowej struktury, natomiast
+&lt;code&gt;pub&lt;/code&gt; oznacza tutaj, że chcemy, aby była ona widoczna na zewnątrz tego modułu
+(odpowiednik &lt;code&gt;public&lt;/code&gt; z C++ czy Javy).&lt;/p&gt;
+&lt;h2&gt;Projektowanie API i model własności&lt;/h2&gt;
+&lt;p&gt;Skoro już wiemy, gdzie chcemy umieścić kod do obsługi protokołu HTTP, to nadszedł
+czas na zaprojektowanie API.&lt;/p&gt;
+&lt;p&gt;Chciałbym, żeby głównym obiektem był &lt;code&gt;http::HttpStream&lt;/code&gt;. Będzie on opakowaniem
+dla &lt;code&gt;net::TcpStream&lt;/code&gt; z dodatkiem specyficznych dla protokołu HTTP własności.
+Będzie on też właścicielem połączenia TCP przez resztę działania programu.
+Wydaje się, że to dobry moment na napisanie trochę o modelu własności Rusta.&lt;/p&gt;
+&lt;h2&gt;Model własności (&lt;strong&gt;ownership, borrowing&lt;/strong&gt;)&lt;/h2&gt;
+&lt;p&gt;Model własności jest prawdopodobnie najważniejszą cechą Rusta, wyróżniającą go
+na tle współczesnych języków programowania.&lt;/p&gt;
+&lt;p&gt;W Ruscie, obiekt do funkcji możemy przekazać na trzy sposoby:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;{};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;xyz&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;&lt;code&gt;foo(x)&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;W przypadku &lt;code&gt;foo&lt;/code&gt;, &lt;code&gt;x&lt;/code&gt; przekazywany jest przez &lt;strong&gt;wartość&lt;/strong&gt;. W Ruscie oznacza to
+jednak jedną z dwóch możliwości:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;x&lt;/code&gt; zostanie skopiowany (jeśli implementuje cechę &lt;code&gt;Copy&lt;/code&gt;, o tym później), lub&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;x&lt;/code&gt; zostanie &lt;strong&gt;oddany na własność&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;W tym drugim przypadku, &lt;code&gt;x&lt;/code&gt; nie będzie mógł być użyty po oddaniu go innej
+funkcji! Przykładowo:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;X&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;:&lt;span class="nc"&gt;X&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;X&lt;/span&gt;&lt;span class="p"&gt;{};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;próba kompilacji powyższego kodu skończy się błędem:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;error[E0382]: use of moved value: `x`
+ --&amp;gt; &amp;lt;anon&amp;gt;:7:9
+  |
+  |     foo(x);
+  |         - value moved here
+  |     foo(x);
+  |         ^ value used here after move
+  |
+  = note: move occurs because `x` has type `X`, which does not implement the `Copy` trait
+
+error: aborting due to previous error
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;x&lt;/code&gt; zostaje tutaj &lt;strong&gt;oddany na własność&lt;/strong&gt; funkcji &lt;code&gt;foo()&lt;/code&gt;, co oznacza, że
+tracimy do niego dostęp. Dzięki takiej semantyce, kompilator może zrobić dwie rzeczy:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;zabronić używania &lt;code&gt;x&lt;/code&gt; po tym jak został oddany (jak oddasz komuś książkę, to
+przecież nie możesz jej nadal czytać),&lt;/li&gt;
+&lt;li&gt;poprawnie zdecydować, że to nie ta funkcja odpowiada za zwolnienie pamięci
+(tylko &lt;code&gt;foo&lt;/code&gt;, a być może inna funkcja, której &lt;code&gt;foo&lt;/code&gt; przekazuje &lt;code&gt;x&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;W taki własnie sposób, Rust zapewnia bezpieczeństwo przy jednoczesnym braku
+kosztu w trakcie wykonania programu (nie musimy zliczać referencji do &lt;code&gt;x&lt;/code&gt;, ani
+zaprzęgać do pracy garbage collectora).&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;bar(&amp;amp;x)&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;&amp;amp;x&lt;/code&gt; w Ruscie oznacza, że zmienną &lt;strong&gt;pożyczamy&lt;/strong&gt; (&lt;strong&gt;borrowing&lt;/strong&gt;). Po skończonej
+pracy, &lt;code&gt;bar()&lt;/code&gt; musi oddać ją nam w nienaruszonym stanie. Tzn. przekazujemy &lt;code&gt;x&lt;/code&gt;
+tylko &lt;strong&gt;do odczytu&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Wtedy, bezpiecznie można wykonać kod taki jak:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;bo po każdym wywołaniu &lt;code&gt;bar(&amp;amp;x)&lt;/code&gt;, &lt;code&gt;x&lt;/code&gt; trafia z powrotem w nasze ręce.
+Kompilator wie wtedy, że:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;bar&lt;/code&gt; nie musi się martwić o zwalnianie pamięci dla &lt;code&gt;x&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bar&lt;/code&gt; nie może trzymać &lt;code&gt;x&lt;/code&gt; w nieskończoność (więcej o tym, jak długo &lt;code&gt;bar&lt;/code&gt;
+może korzystać z &lt;code&gt;x&lt;/code&gt; opowiem przy okazji omawiania &lt;strong&gt;lifetimes&lt;/strong&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;code&gt;xyz(&amp;amp;mut x)&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Podobnie jak &lt;code&gt;&amp;amp;x&lt;/code&gt;, lecz tym razem pozwalamy zmieniać pożyczony obiekt. Dopiero
+przy omawianiu &lt;strong&gt;lifetimes&lt;/strong&gt; będzie można powiedzieć coś więcej o tym jak
+różnie &lt;code&gt;&amp;amp;&lt;/code&gt; oraz &lt;code&gt;&amp;amp;mut&lt;/code&gt; są traktowane przez kompilator. Proszę o cierpliwość ;).&lt;/p&gt;
+&lt;h2&gt;Projektowanie API (ciąg dalszy)&lt;/h2&gt;
+&lt;p&gt;Skoro wiemy już co nieco o tym jak przekazuje się zmienne w Ruscie, możemy
+przejść do wymyślania, jak chcemy korzystać z naszego nowo utworzonego
+&lt;code&gt;http::HttpStream&lt;/code&gt;. Na początek, napiszemy sobie zwykły &lt;strong&gt;echo server&lt;/strong&gt;, tzn.
+będziemy odsyłać zapytania, które otrzymaliśmy.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// ... główna pętla znajdzie się tutaj ...&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Z pewnością potrzebujemy &lt;strong&gt;oddać&lt;/strong&gt; połączenie TCP nowemu obiektowi &lt;code&gt;HttpStream&lt;/code&gt;
+(nie chcemy, aby ktokolwiek inny mógł pisać do tego samego gniazda) i posłuży
+nam do tego funkcja &lt;code&gt;new&lt;/code&gt;. W tej chwili, &lt;code&gt;HttpStream&lt;/code&gt; będzie wyglądać tak:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;net&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;tcp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;impl&lt;/code&gt; służy do implementowania metod dla danej struktury. Jak widać, zamiast
+dodawać słowo kluczowe &lt;code&gt;pub&lt;/code&gt; przed &lt;code&gt;impl&lt;/code&gt;, robi się to na poziomie pojedynczych
+metod. W tym przypadku, &lt;code&gt;new&lt;/code&gt; jest &lt;strong&gt;associated function&lt;/strong&gt; (w innych językach
+nazwalibyśmy ją metodą statyczną (static method)), co oznacza, że nie potrzebuje
+przyjmować obiektu tego typu jako swojego argumentu (ale dalej ma dostęp do
+prywatnych pól). Stąd też wywołuje się ją jako &lt;code&gt;HttpStream::new()&lt;/code&gt; zamiast
+&lt;code&gt;h.new()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Jedynym zadaniem &lt;code&gt;new&lt;/code&gt; jest przekazanie &lt;code&gt;tcp&lt;/code&gt; do &lt;code&gt;HttpStream&lt;/code&gt;. Robimy to, bo nie
+chcemy, aby &lt;code&gt;tcp&lt;/code&gt; było publicznym polem &lt;code&gt;HttpStream&lt;/code&gt; (przynajmniej na razie).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while getting http request: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Pojawiły się dwie nowe metody: &lt;code&gt;is_closed()&lt;/code&gt; oraz &lt;code&gt;get()&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;io&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;io&lt;/span&gt;::&lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;HttpPacket&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// TODO&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HttpPacket&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// TODO&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;get&lt;/code&gt; będzie służyć do odbierania pakietów HTTP (&lt;code&gt;HttpPacket&lt;/code&gt;), w związku z tym:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;musi mieć możliwość zmiany pola &lt;code&gt;tcp&lt;/code&gt;, stąd &lt;code&gt;get&lt;/code&gt; przyjmuje mutowalną
+  referencję (&lt;code&gt;&amp;amp;mut&lt;/code&gt;) do obiektu typu &lt;code&gt;HttpStream&lt;/code&gt; (&lt;code&gt;self&lt;/code&gt;, podobnie jak w
+  Pythonie),&lt;/li&gt;
+&lt;li&gt;zwraca &lt;code&gt;io::Result&amp;lt;HttpPacket&amp;gt;&lt;/code&gt;, bo tak &lt;a href="serwer-proxy-w-ruscie-czesc-2.html"&gt;jak już
+  wspominałem&lt;/a&gt;, coś może podczas
+  odczytywania pójść nie tak i chciałbym mieć możliwość obsługi błędu,&lt;/li&gt;
+&lt;li&gt;na razie implementacja ogranicza się do zwrócenia &lt;code&gt;Ok(HttpPacket {})&lt;/code&gt;, czyli
+  pustego pakietu (gdybym chciał zwrócić błąd, użyłbym &lt;code&gt;Err&lt;/code&gt; zamiast &lt;code&gt;Ok&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;is_closed&lt;/code&gt; natomiast, po prostu odpowiada na pytanie, czy połączenie zostało
+zamknięte.&lt;/p&gt;
+&lt;p&gt;Jak widać, potrzebna jest nam nowa struktura, &lt;code&gt;HttpPacket&lt;/code&gt;, która będzie
+reprezentować pojedynczy pakiet HTTP.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;HttpPacket&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Pozostało teraz dopisać linijkę, odpowiadającą za odsyłanie odpowiedzi.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while getting http request: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpPacket&lt;/span&gt;&lt;span class="p"&gt;{});&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Oraz odpowiednią (pustą, na razie) implementację &lt;code&gt;send&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;packet&lt;/span&gt;: &lt;span class="kp"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nc"&gt;HttpPacket&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;io&lt;/span&gt;::&lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(())&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;send&lt;/code&gt; może zwrócić błąd, ale poza tym, nie zwraca niczego interesującego. W
+takim wypadku, przydaje się typ &lt;code&gt;()&lt;/code&gt; (unit), podobny do &lt;code&gt;void&lt;/code&gt; znanego z innych
+języków.&lt;/p&gt;
+&lt;h2&gt;Podsumowanie&lt;/h2&gt;
+&lt;p&gt;Jak widać, nie udało się napisać nam jeszcze niczego co jakkolwiek sensownie
+działa, ale przebrnęliśmy przez kilka kluczowych cech Rusta, bez których
+jakiekolwiek zrozumienie dowolnego kodu byłoby niemożliwe.&lt;/p&gt;
+&lt;p&gt;Mam nadzieję, ze w kolejnym poście uda mi się zaimplementować prosty serwer
+echo.&lt;/p&gt;
+&lt;hr&gt;
+
+&lt;h3&gt;Przypisy&lt;/h3&gt;
+&lt;p&gt;&lt;a name="rust-i-cargo"&gt;&lt;/a&gt;&lt;sup&gt;1&lt;/sup&gt; W oficjalnej dokumentacji przez "Rust" rozumie się
+zarówno sam język jak i &lt;code&gt;cargo&lt;/code&gt;. (&lt;a href="#backref-1"&gt;wróć do tekstu&lt;/a&gt;)&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Serwer proxy w Ruscie (część 2)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-2.html" rel="alternate"></link><published>2017-06-03T00:00:00+02:00</published><updated>2017-06-03T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-03:/serwer-proxy-w-ruscie-czesc-2.html</id><summary type="html">&lt;p&gt;Początkowy szkielet programu.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Posłuchajmy czegoś po TCP&lt;/h2&gt;
 &lt;p&gt;Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
 

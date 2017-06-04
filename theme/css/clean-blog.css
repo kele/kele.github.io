@@ -18,6 +18,13 @@ p {
 p a {
   text-decoration: underline;
 }
+sup {
+  top: -.75em;
+  font-size: 0.6em;
+}
+sup a {
+  text-decoration: none;
+}
 h1,
 h2,
 h3,
