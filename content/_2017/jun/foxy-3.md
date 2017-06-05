@@ -4,7 +4,8 @@ Category: rust
 Tags: rust, foxy
 Summary: Model własności (ownership and borrowing), struktury, metody - szkielet echo serwera HTTP.
 
-Kod dostępny tutaj: [9bbbf8b](https://github.com/kele/foxy/commit/9bbbf8b529f477c3a15fac46f7bb3ee379c5d317)
+Kod dostępny [tutaj](https://github.com/kele/foxy/tree/part3).
+
 ## Obsługa protokołu HTTP
 Rust ma w miarę dojrzałą bibliotekę do obsługi protokołu HTTP - jest nią
 [**hyper**](https://github.com/hyperium/hyper). Biblioteka ta jest używana m.in.
