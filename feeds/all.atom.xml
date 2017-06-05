@@ -274,6 +274,11 @@ działa, ale przebrnęliśmy przez kilka kluczowych cech Rusta, bez których
 jakiekolwiek zrozumienie dowolnego kodu byłoby niemożliwe.&lt;/p&gt;
 &lt;p&gt;Mam nadzieję, ze w kolejnym poście uda mi się zaimplementować prosty serwer
 echo.&lt;/p&gt;
+&lt;h1&gt;Pozostałe części&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;następny post (część 4) w przygotowaniu&lt;/li&gt;
+&lt;li&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-2.html"&gt;poprzedni post (część 2)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
 &lt;hr&gt;
 
 &lt;h3&gt;Przypisy&lt;/h3&gt;
@@ -429,6 +434,11 @@ końca, ale o tym kiedy indziej) typu.&lt;/p&gt;
 &lt;li&gt;implementacje cech (trait),&lt;/li&gt;
 &lt;li&gt;wyrażenia i rozkazy (expressions and statements),&lt;/li&gt;
 &lt;li&gt;i wiele innych.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;Pozostałe części&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-3.html"&gt;następny post (część 3)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-1.html"&gt;poprzedni post (część 1)&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Serwer proxy w Ruscie (część 1)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-1.html" rel="alternate"></link><published>2017-06-02T00:00:00+02:00</published><updated>2017-06-02T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-02:/serwer-proxy-w-ruscie-czesc-1.html</id><summary type="html">&lt;p&gt;Nauka Rusta na podstawie prostego serwera proxy.&lt;/p&gt;</summary><content type="html">&lt;h1&gt;O czym będzie ten projekt?&lt;/h1&gt;
 &lt;h2&gt;Motywacja&lt;/h2&gt;
 &lt;p&gt;Jestem człowiekiem, który stale się czymś rozprasza. Często odwiedzam strony dla
@@ -496,7 +506,9 @@ repozytorium Git (miły gest ;)).&lt;/p&gt;
 &lt;p&gt;Projekt budujemy przy pomocy &lt;code&gt;cargo build&lt;/code&gt;. Początkowo, &lt;code&gt;cargo&lt;/code&gt; tworzy nam znane
 Hello World.&lt;/p&gt;
 &lt;h1&gt;Koniec postu&lt;/h1&gt;
-&lt;p&gt;Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Blog po polsku (blog in Polish)</title><link href="http://kele.github.io/blog-po-polsku-blog-in-polish.html" rel="alternate"></link><published>2017-06-01T00:00:00+02:00</published><updated>2017-06-01T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-01:/blog-po-polsku-blog-in-polish.html</id><summary type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
+&lt;p&gt;Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)&lt;/p&gt;
+&lt;h1&gt;Kolejne części&lt;/h1&gt;
+&lt;p&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-2.html"&gt;Część 2&lt;/a&gt;, &lt;a href="serwer-proxy-w-ruscie-czesc-3.html"&gt;część 3&lt;/a&gt;.&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Blog po polsku (blog in Polish)</title><link href="http://kele.github.io/blog-po-polsku-blog-in-polish.html" rel="alternate"></link><published>2017-06-01T00:00:00+02:00</published><updated>2017-06-01T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-01:/blog-po-polsku-blog-in-polish.html</id><summary type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
 &lt;h4&gt;Od dziś, blog będzie prowadzony wyłącznie po polsku.&lt;/h4&gt;
 &lt;h4&gt;Plany na najbliższą przyszłość: http proxy napisane w Ruscie.&lt;/h4&gt;</summary><content type="html">&lt;h4&gt;Starting from this post, the blog is going to be in Polish language only.&lt;/h4&gt;
 &lt;h4&gt;Od dziś, blog będzie prowadzony wyłącznie po polsku.&lt;/h4&gt;
