@@ -167,3 +167,6 @@ W kolejnych postach planuję omówić:
 - wyrażenia i rozkazy (expressions and statements),
 - i wiele innych.
 
+# Pozostałe części
+- [następny post (część 3)](serwer-proxy-w-ruscie-czesc-3.html)
+- [poprzedni post (część 1)](serwer-proxy-w-ruscie-czesc-1.html)

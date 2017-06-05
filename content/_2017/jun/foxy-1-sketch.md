@@ -83,3 +83,6 @@ Hello World.
 
 # Koniec postu
 Na dziś to koniec. W kolejnym poście będzie już trochę kodu. ;)
+
+# Kolejne części
+[Część 2](serwer-proxy-w-ruscie-czesc-2.html), [część 3](serwer-proxy-w-ruscie-czesc-3.html).
