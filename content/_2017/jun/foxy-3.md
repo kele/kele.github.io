@@ -298,7 +298,7 @@ Mam nadzieję, ze w kolejnym poście uda mi się zaimplementować prosty serwer
 echo.
 
 # Pozostałe części
-- następny post (część 4) w przygotowaniu
+- [następny post (część 4)](serwer-proxy-w-ruscie-czesc-4.html)
 - [poprzedni post (część 2)](serwer-proxy-w-ruscie-czesc-2.html)
 
 <hr>
