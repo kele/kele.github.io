@@ -3,7 +3,8 @@ Date: 2017-06-05
 Category: rust
 Tags: rust, foxy
 Summary: Serwer echo (**lifetimes**, odbieranie i wysyłanie pakietów TCP)
-lang: pl
+lang: en
+Status: draft
 
 Kod dostępny [tutaj](https://github.com/kele/foxy/tree/part4).
 

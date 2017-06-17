@@ -19,3 +19,10 @@ CATEGORY_FEED_ATOM = 'feeds/%s.atom.xml'
 DELETE_OUTPUT_DIRECTORY = True
 
 DISQUS_SITENAME = "kele-github-io"
+
+PLUGIN_PATHS = ['/usr/lib/python3.6/site-packages/pelican/pelican-plugins']
+PLUGINS = ['i18n_subsites']
+
+I18N_SUBSITES = {
+    'en': { }
+}

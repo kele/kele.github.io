@@ -3,7 +3,8 @@ Date: 2017-06-17
 Category: rust
 Tags: rust, foxy, error handling, macros
 Summary: Obsługa błędów, makra.
-lang: pl
+lang: en
+Status: draft
 
 ## Błędy, błędy, wszędzie błędy
 Dopóki pisze się małe skrypty dla własnego użytku, obsługa błędów nie jest tak

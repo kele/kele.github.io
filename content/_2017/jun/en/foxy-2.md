@@ -3,7 +3,9 @@ Date: 2017-06-03
 Category: rust
 Tags: rust, foxy
 Summary: Początkowy szkielet programu.
-lang: pl
+lang: en
+Status: draft
+
 
 ## Posłuchajmy czegoś po TCP
 Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):

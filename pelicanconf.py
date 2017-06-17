@@ -23,13 +23,7 @@ AUTHOR_FEED_ATOM = None
 AUTHOR_FEED_RSS = None
 
 # Blogroll
-LINKS = (('GitHub link for my CIFAR10 recognition project',
-          'https://github.com/kele/cifar_recognition'),
-         ('Neural Networks and Deep Learning by Michael Nielsen',
-          'http://neuralnetworksanddeeplearning.com'),
-         ('Python.org', 'http://python.org/'),
-         ('Jinja2', 'http://jinja.pocoo.org/'),
-         )
+LINKS = ()
 
 # Social widget
 SOCIAL = ()

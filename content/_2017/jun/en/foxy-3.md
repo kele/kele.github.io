@@ -3,7 +3,8 @@ Date: 2017-06-04
 Category: rust
 Tags: rust, foxy
 Summary: Model własności (ownership and borrowing), struktury, metody - szkielet echo serwera HTTP.
-lang: pl
+lang: en
+Status: draft
 
 Kod dostępny [tutaj](https://github.com/kele/foxy/tree/part3).
 

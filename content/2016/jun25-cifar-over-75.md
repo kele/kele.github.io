@@ -2,6 +2,7 @@ Title: Using Lasagne to achieve over 75% accuracy on CIFAR10.
 Date: 2016-01-25
 Category: cifar
 Tags: neural networks, cifar
+lang: en
 
 This is the first report of my battle with the [CIFAR10
 classification](https://www.cs.toronto.edu/~kriz/cifar.html) problem.

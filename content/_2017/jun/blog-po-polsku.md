@@ -2,6 +2,7 @@ Title: Blog po polsku (blog in Polish)
 Date: 2017-06-01
 Category: meta
 Tags: meta, polski
+lang: pl
 
 #### Starting from this post, the blog is going to be in Polish language only.
 

@@ -1,6 +1,7 @@
 Title: CIFAR10 classification summary
 Date: 2016-03-04
 Category: neural networks
+lang: en
 
 #Problem description
 [CIFAR10](https://www.cs.toronto.edu/~kriz/cifar.html) classification is a very popular problem among neural networks enthusiast. The main task is to map 32x32 RGB images to (disjoint) classes. This (simple) version of the problem differentiates 10 classes (hence the name).

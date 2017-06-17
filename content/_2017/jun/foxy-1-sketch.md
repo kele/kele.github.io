@@ -3,6 +3,7 @@ Date: 2017-06-02
 Category: rust
 Tags: rust, foxy
 Summary: Nauka Rusta na podstawie prostego serwera proxy.
+lang: pl
 
 
 # O czym będzie ten projekt?

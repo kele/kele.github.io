@@ -1,6 +1,7 @@
 Title: Setting up IPython with Git
 Date: 2016-01-17
 Category: ipython
+lang: en
 
 Since I've been annoyed by how IPython notebooks integrate with Git, I'd like
 to share a solution for this problem.

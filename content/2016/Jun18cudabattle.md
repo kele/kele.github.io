@@ -2,6 +2,7 @@ Title: Getting CUDA working on a laptop with two GPUs
 Date: 2016-01-18
 Category: cuda
 Tags: cuda, neural networks
+lang: en
 
 I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
 14.04. These steps might actually help somebody.
