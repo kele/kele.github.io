@@ -79,4 +79,4 @@ World**.
 It's all for today. In the next post there will be some code, I promise! :)
 
 # Other parts
-[next part](serwer-proxy-w-ruscie-czesc-2.html), [część 3](serwer-proxy-w-ruscie-czesc-3.html).
+[next part](proxy-server-in-rust-part-2.html)
