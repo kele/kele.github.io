@@ -276,7 +276,7 @@ pakietach HTTP.
 
 
 # Pozostałe części
-- następny post (część 5) w przygotowaniu
+- [następny post (część 5) (obsługa błędów)](serwer-proxy-w-ruscie-czesc-5.html)
 - [poprzedni post (część 3)](serwer-proxy-w-ruscie-czesc-3.html)
 
 

@@ -206,5 +206,5 @@ w Ruscie będzie kluczowe dla powodzenia tego projektu. :)
 
 # Pozostałe części
 - następny post (część 6) w przygotowaniu
-- [poprzedni post (część 4)](serwer-proxy-w-ruscie-czesc-4.html)
+- [poprzedni post (część 4) (serwer echo, lifetimes)](serwer-proxy-w-ruscie-czesc-4.html)
 
