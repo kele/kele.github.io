@@ -1,5 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-05T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 4)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-4.html" rel="alternate"></link><published>2017-06-05T00:00:00+02:00</published><updated>2017-06-05T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-05:/serwer-proxy-w-ruscie-czesc-4.html</id><summary type="html">&lt;p&gt;Serwer echo (&lt;strong&gt;lifetimes&lt;/strong&gt;, odbieranie i wysyłanie pakietów TCP)&lt;/p&gt;</summary><content type="html">&lt;p&gt;Kod dostępny &lt;a href="https://github.com/kele/foxy/tree/part4"&gt;tutaj&lt;/a&gt;.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/</id><updated>2017-06-17T00:00:00+02:00</updated><entry><title>Serwer proxy w Ruscie (część 5)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-5.html" rel="alternate"></link><published>2017-06-17T00:00:00+02:00</published><updated>2017-06-17T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-17:/serwer-proxy-w-ruscie-czesc-5.html</id><summary type="html">&lt;p&gt;Obsługa błędów, makra.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Błędy, błędy, wszędzie błędy&lt;/h2&gt;
+&lt;p&gt;Dopóki pisze się małe skrypty dla własnego użytku, obsługa błędów nie jest tak
+istotna. Kiedy tylko zaczyna się &lt;strong&gt;(a)&lt;/strong&gt; pisać oprogramowanie dla innych,
+&lt;strong&gt;(b)&lt;/strong&gt; korzystać z wejścia/wyjścia (pliki, połączenia sieciowe, itd.), to nagle
+okazuje się, że obsługa błędów zajmuje naprawdę dużo czasu programisty.&lt;/p&gt;
+&lt;h2&gt;Bez wyjątków&lt;/h2&gt;
+&lt;p&gt;Jedną z technik jakie kiedyś wymyślono, żeby obsługa błędów była mniej
+uciążliwa dla programisty jest mechanizm wyjątków (exceptions). Większość
+popularnych języków (Java, C#, C++, Python) wspiera wyjątki.&lt;/p&gt;
+&lt;p&gt;Dwa największe problemy tego rozwiązania to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;spadek wydajności,&lt;/li&gt;
+&lt;li&gt;łatwo można zignorować obsługę wyjątku.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Pierwsza wada dotyczy zastosowań, w których &lt;strong&gt;wydajność (lub minimalizowanie
+opóźnień) gra kluczową rolę dla działania systemu&lt;/strong&gt;. Rust jest językiem, który
+jest przeznaczony m.in. do takich zastosowań. Drugi problem byłby także dużą
+skazą dla języka, który tak wiele robi aby oprogramowanie było bezpieczne.&lt;/p&gt;
+&lt;h3&gt;Go&lt;/h3&gt;
+&lt;p&gt;Jednym ze współczesnych języków programowania, które nie wspierają mechanizmu
+wyjątków jest Go. W tym przypadku, obsługa błędów wygląda mniej więcej jak w C.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nx"&gt;err&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="nx"&gt;err&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="kc"&gt;nil&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;err&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Powyższy kawałek kodu pojawia się naprawdę bardzo, bardzo często. Na tyle, że
+możnaby pomyśleć o sprawieniu sobie takiej klawiatury specjalnie do pisania w
+Go:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.reddit.com/r/ProgrammerHumor/comments/6fmlxj/introducing_the_go_keyboard/"&gt;&lt;img alt="/r/ProgrammingHumor" src="http://i.imgur.com/EVc3Nm0.png" title="/r/ProgrammingHumor"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Jak robi to Rust?&lt;/h2&gt;
+&lt;p&gt;Rust ma nieco inne podejście. Przy pomocy swojego systemu typów, stara się
+osiągnąć:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;trudną do zignorowania obsługę błędów,&lt;/li&gt;
+&lt;li&gt;brak spadku wydajności spowodowanego obsługą wyjątków.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;code&gt;Option&lt;/code&gt;, &lt;code&gt;Result&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Bazą są typy &lt;code&gt;Option&lt;/code&gt; i &lt;code&gt;Result&lt;/code&gt;, o których wspominałem już w poprzednich
+postach. Pierwszy reprezentuje &lt;strong&gt;coś albo nic&lt;/strong&gt; (podobnie jak
+&lt;a href="http://en.cppreference.com/w/cpp/utility/optional"&gt;std::optional&lt;/a&gt; z C++), drugi
+zaś &lt;strong&gt;wartość albo błąd&lt;/strong&gt;. W obu przypadkach &lt;strong&gt;albo&lt;/strong&gt; należy rozumieć jako
+&lt;strong&gt;dokładnie jedna z możliwości&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="nb"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Some&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Nasza liczba: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;None&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Oops, coś poszło nie tak.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Jak można się domyślać, obiekty typu &lt;code&gt;Option&lt;/code&gt; lub &lt;code&gt;Result&lt;/code&gt; nie mogą być użyte
+"wprost". Zawsze trzeba je jakoś odpakować. Najprościej można to zrobić przy
+pomocy metody &lt;code&gt;unwrap()&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="nb"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Nasza liczba: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unwrap&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Co się wtedy stanie? &lt;code&gt;unwrap()&lt;/code&gt; zwróci wartość jeśli &lt;code&gt;Option&lt;/code&gt; ją zawiera, a
+jeśli nie, wywołane zostanie &lt;code&gt;panic!&lt;/code&gt; (kończące pracę działania programu).
+Oprócz &lt;code&gt;unwrap()&lt;/code&gt; zaimplementowano też kilka innych, bardzo przydantych metod:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;unwrap_or(v)&lt;/code&gt; - odpakuj, a jeśli nic nie znajdziesz, zwróć &lt;code&gt;v&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;unwrap_or_default()&lt;/code&gt; - zwróć domyślną wartość, jeśli nic nie znajdziesz.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;W związku z tym, wydaje się, że każde solidne narzędzie do code review dla Rusta
+powinno podświetlać &lt;code&gt;unwrap()&lt;/code&gt; na czerwono. :)&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;try!&lt;/code&gt; oraz &lt;code&gt;?&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Jak widać, &lt;code&gt;Option&lt;/code&gt; niezbyt ustrzega nas przed pisaniem kodu podobnego do tego w
+Go. W tym może nam pomóc typ &lt;code&gt;Result&lt;/code&gt;, który można użyć w ten sposób:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Nasza liczba: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Taka konstrukcja, jak można się domyślać, byłaby używana bardzo, bardzo często.
+W związku z tym, można ją skrócić do:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Nasza liczba: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;try&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;lub&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Nasza liczba: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Ta druga forma jest szczególnie przydatna, kiedy chcemy coś odpakować z kilku
+warstw. &lt;code&gt;?&lt;/code&gt; jest jedynie lukrem syntaktycznym i jest równoważne użyciu &lt;code&gt;try!&lt;/code&gt;.&lt;/p&gt;
+&lt;h2&gt;Kilka słów o makrach&lt;/h2&gt;
+&lt;p&gt;Zarówno &lt;code&gt;try!&lt;/code&gt; jak i &lt;code&gt;panic!&lt;/code&gt;, &lt;code&gt;println!&lt;/code&gt;, &lt;code&gt;write!&lt;/code&gt; są makrami. Ich cechą
+wspólną jest to, że ich wywołania zawierają w sobie &lt;code&gt;!&lt;/code&gt;, w przeciwieństwie do
+funkcji. Ze względu na bardzo rygorystyczny system typów Rusta, niektóre wzorce
+trudno jest zapisać jako zwyczajne funkcje. Wtedy przychodzą z pomocą makra.&lt;/p&gt;
+&lt;p&gt;Makra, podobnie jak w C, są po prostu lukrem syntaktycznym i są zamieniane na
+swoje ciało podczas kompilacji. W przeciwieństwie do C, makra w Ruscie są
+bardziej zaawansowane i mniej podatne na nadużycia (np. nie da się zrobić
+&lt;code&gt;#define true false&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;Na razie niewiele wiem o pisaniu makr, dlatego ograniczymy się do ich używania,
+zamiast tworzyć nowe (prawdopodobnie zbędne).&lt;/p&gt;
+&lt;h2&gt;Wracamy do &lt;code&gt;try!&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;Skoro wiemy już, że &lt;code&gt;try!&lt;/code&gt; jest makrem, warto byłoby się dowiedzieć jak ono
+działa.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;(...) In case of the Err variant, it retrieves the inner error. &lt;strong&gt;try! then
+performs conversion using From.&lt;/strong&gt; This provides automatic conversion between
+specialized errors and more general ones. The resulting error is then
+immediately returned. (...)&lt;/em&gt;
+&lt;a href="https://doc.rust-lang.org/nightly/std/macro.try.html"&gt;rust-lang.org&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Rust unika niejawnych konwersji (np. między kawałkiem napisu &lt;code&gt;&amp;amp;str&lt;/code&gt;
+a obiektem, który jest napisem i właścicielem pamięci, w której się on znajduje
+&lt;code&gt;String&lt;/code&gt;). W związku z tym, pisząc kod często możemy się natknąć na to, że
+funkcja, w której używamy &lt;code&gt;try!&lt;/code&gt; zwraca inny typ błędu niż wartość, którą chcemy
+odpakować. Wtedy przydaje się cecha &lt;code&gt;std::convert::From&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;trait&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Self&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Oznacza ona po prostu tyle co: z obiektu &lt;code&gt;T&lt;/code&gt; możemy zrobić obiekt &lt;code&gt;Self&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Przykładowo, jeśli wynikiem działania naszej funkcji mógłby być &lt;code&gt;io::Error&lt;/code&gt; (np.
+zerwane połączenie TCP), lub &lt;code&gt;str::Utf8Error&lt;/code&gt; (nie udało się poprawnie odczytać
+napisu), to moglibyśmy napisać sobie taki kod:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;enum&lt;/span&gt; &lt;span class="nc"&gt;MyError&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Utf8&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Io&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;io&lt;/span&gt;::&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Utf8Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MyError&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;: &lt;span class="nc"&gt;Utf8Error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Self&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;MyError&lt;/span&gt;::&lt;span class="n"&gt;Utf8&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;io&lt;/span&gt;::&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MyError&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;: &lt;span class="nc"&gt;io&lt;/span&gt;::&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Self&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;MyError&lt;/span&gt;::&lt;span class="n"&gt;Io&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;utf8&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Utf8Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;read&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;io&lt;/span&gt;::&lt;span class="n"&gt;Error&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;i32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MyError&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;utf8&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Powiedzieliśmy w ten sposób kompilatorowi, w jaki sposób powinien przekształcać
+jeden rodzaj błędów na inny. W tym przypadku zdecydowaliśmy, że nie interesują
+nas szczegóły błędu &lt;code&gt;Utf8Error&lt;/code&gt; w związku z tym zignorowaliśmy jego zawartość,
+ale już &lt;code&gt;io::Error&lt;/code&gt; jest dla nas interesujące. Oba typy błędów mogą znaleźć się
+teraz w &lt;code&gt;MyError&lt;/code&gt; i swobodnie można używać &lt;code&gt;?&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Dopisanie implementacji cechy &lt;code&gt;From&lt;/code&gt; wydaje się żmudną pracą, ale za te kilka
+linijek dostajemy dużo większą kontrolę nad obsługą błędów, bez ryzyka
+przypadkowych zupełnie konwersji.&lt;/p&gt;
+&lt;h2&gt;Podsumowanie&lt;/h2&gt;
+&lt;p&gt;W tej części nie napisaliśmy żadnego kodu, który znajdzie się w
+implementacji naszego serwera HTTP. Niemniej jednak, aby był on odporny na
+różnego rodzaju problemy (chcę go używać cały czas), zrozumienie obsługi błędów
+w Ruscie będzie kluczowe dla powodzenia tego projektu. :)&lt;/p&gt;
+&lt;h1&gt;Pozostałe części&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;następny post (część 6) w przygotowaniu&lt;/li&gt;
+&lt;li&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-4.html"&gt;poprzedni post (część 4) (serwer echo, lifetimes)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><category term="rust"></category><category term="foxy"></category><category term="error handling"></category><category term="macros"></category></entry><entry><title>Serwer proxy w Ruscie (część 4)</title><link href="http://kele.github.io/serwer-proxy-w-ruscie-czesc-4.html" rel="alternate"></link><published>2017-06-05T00:00:00+02:00</published><updated>2017-06-05T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-05:/serwer-proxy-w-ruscie-czesc-4.html</id><summary type="html">&lt;p&gt;Serwer echo (&lt;strong&gt;lifetimes&lt;/strong&gt;, odbieranie i wysyłanie pakietów TCP)&lt;/p&gt;</summary><content type="html">&lt;p&gt;Kod dostępny &lt;a href="https://github.com/kele/foxy/tree/part4"&gt;tutaj&lt;/a&gt;.&lt;/p&gt;
 &lt;h2&gt;Projektowanie API - ciąg dalszy&lt;/h2&gt;
 &lt;h3&gt;Stara definicja &lt;code&gt;HttpPacket&lt;/code&gt;&lt;/h3&gt;
 &lt;p&gt;W poprzednim poście naszkicowaliśmy API &lt;code&gt;HttpStream&lt;/code&gt;, tak, że zawiera m.in.
@@ -255,7 +437,7 @@ przejść code review w tym przypadku) oraz tym, co tak naprawdę znajduje się 
 pakietach HTTP.&lt;/p&gt;
 &lt;h1&gt;Pozostałe części&lt;/h1&gt;
 &lt;ul&gt;
-&lt;li&gt;następny post (część 5) w przygotowaniu&lt;/li&gt;
+&lt;li&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-5.html"&gt;następny post (część 5) (obsługa błędów)&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-3.html"&gt;poprzedni post (część 3)&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3&gt;Przypisy&lt;/h3&gt;
