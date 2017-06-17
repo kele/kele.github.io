@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/en/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/en/</id><updated>2017-06-07T00:00:00+02:00</updated><entry><title>Proxy server in Rust (part 1)</title><link href="http://kele.github.io/en/proxy-server-in-rust-part-1.html" rel="alternate"></link><published>2017-06-07T00:00:00+02:00</published><updated>2017-06-07T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-07:/en/proxy-server-in-rust-part-1.html</id><summary type="html">&lt;p&gt;Learning Rust by writing a simple proxy server.&lt;/p&gt;</summary><content type="html">&lt;h1&gt;What this is all about&lt;/h1&gt;
+&lt;h2&gt;Motivation&lt;/h2&gt;
+&lt;p&gt;I'm constantly distracting myself. Very often I visit sites like Hacker News or
+lobste.rs even though I don't have time to read the articles. As one can
+imagine, it doesn't help very much with being productive. I don't really have
+this problem when I'm busy and focused, but when I have 2-3 minutes to spare
+(because the project is building, my map-reduce is running or I'm waiting for a
+reply), my habit is to skim through every website that I find at least mildly
+interesting.&lt;/p&gt;
+&lt;p&gt;I've tried different Chrome extensions, changes in &lt;code&gt;/etc/hosts&lt;/code&gt; or blocking some
+domains on my home router, but none of these were flexible enough for me so I
+ended up working around them. This is where the idea of writing my own proxy
+server came from. The list of features should include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;redirecting,&lt;/li&gt;
+&lt;li&gt;time based blocking,&lt;/li&gt;
+&lt;li&gt;delaying (if a site loads slowly, I tend to realize that I shouldn't be doing
+  this),&lt;/li&gt;
+&lt;li&gt;etc.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Why Rust?&lt;/h2&gt;
+&lt;p&gt;The language I used the most was always C++. At work I'm using mostly Go now.
+Although, the idea of having a strong compiler definitely speaks to me. That's
+why I wanted to learn Rust. Also, a proxy server seems to be a project easy
+enough that it won't distract me too much from learning the language itself, but
+hard enough to see whether I like Rust or not.&lt;/p&gt;
+&lt;h2&gt;What can you expect?&lt;/h2&gt;
+&lt;p&gt;This is going to be a journal of my adventure with Rust. I have never ever used
+this language, so it's not going to be a tutorial of &lt;strong&gt;how to write good Rust&lt;/strong&gt;,
+but I'm definitely going to try my best to learn as much as possible and share
+the knowledge. I have an idea what the borrow checking is about and I have some
+experience with rich type systems (Hindley-Milner from OCaml), so I hope I won't
+be lost completely. :)&lt;/p&gt;
+&lt;h1&gt;Preparations&lt;/h1&gt;
+&lt;h2&gt;Compiler&lt;/h2&gt;
+&lt;p&gt;Instalation is very simple: &lt;a href="https://rustup.rs/"&gt;rustup.rs&lt;/a&gt;. Some of the Linux
+distros are going to have Rust in their repositories already.&lt;/p&gt;
+&lt;p&gt;For convenience, most of the operations (creating projects, building, running)
+are done by using a tool called &lt;code&gt;cargo&lt;/code&gt;'. Please, do not forget to install it if
+you're not using rustup.rs.&lt;/p&gt;
+&lt;h2&gt;Documentation and other learning resources&lt;/h2&gt;
+&lt;p&gt;There are lots of good materials for learning Rust. The primary official
+document of the language and the standard library documentation can be both
+found at &lt;a href="https://www.rust-lang.org/"&gt;rust-lang.org&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;My programming environment&lt;/h2&gt;
+&lt;p&gt;VIM + &lt;a href="https://github.com/phildawes/racer"&gt;Racer&lt;/a&gt; +
+&lt;a href="https://github.com/racer-rust/vim-racer"&gt;vim-racer&lt;/a&gt;. Racer is an
+auto-completion tool for Rust.&lt;/p&gt;
+&lt;h2&gt;Creating a new project&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;cargo new --bin project
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This command creates a template of an executable  (&lt;code&gt;--bin&lt;/code&gt;) named &lt;code&gt;project&lt;/code&gt;.
+What's interestinghere is that the project is going to be created under Git
+versioning control system by default (nice gesture ;)).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cargo build&lt;/code&gt; builds the project. The default template is the well known &lt;strong&gt;Hello
+World&lt;/strong&gt;.&lt;/p&gt;
+&lt;h1&gt;The end of the first post&lt;/h1&gt;
+&lt;p&gt;It's all for today. In the next post there will be some code, I promise! :)&lt;/p&gt;
+&lt;h1&gt;Other parts&lt;/h1&gt;
+&lt;p&gt;&lt;a href="serwer-proxy-w-ruscie-czesc-2.html"&gt;next part&lt;/a&gt;, &lt;a href="serwer-proxy-w-ruscie-czesc-3.html"&gt;część 3&lt;/a&gt;.&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry></feed>

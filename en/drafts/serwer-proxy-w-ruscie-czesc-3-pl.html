@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+            <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+
+        <title>Serwer proxy w Ruscie (część 3)</title>
+
+            <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
+            <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
+
+        <!-- Bootstrap Core CSS -->
+        <link href="../../theme/css/bootstrap.css" rel="stylesheet">
+
+        <!-- Custom CSS -->
+        <link href="../../theme/css/clean-blog.css" rel="stylesheet">
+
+        <!-- Code highlight color scheme -->
+            <link href="../../theme/css/code_blocks/darkly.css" rel="stylesheet">
+
+
+        <!-- Custom Fonts -->
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+
+
+
+        <meta name="tags" contents="rust" />
+        <meta name="tags" contents="foxy" />
+
+
+	                <meta property="og:locale" content="pl_PL.utf8">
+		<meta property="og:site_name" content="kele.github.io">
+
+	<meta property="og:type" content="article">
+	<meta property="article:author" content="">
+	<meta property="og:url" content="../drafts/serwer-proxy-w-ruscie-czesc-3-pl.html">
+	<meta property="og:title" content="Serwer proxy w Ruscie (część 3)">
+	<meta property="og:description" content="">
+	<meta property="og:image" content="../">
+	<meta property="article:published_time" content="2017-06-04 00:00:00+02:00">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../">kele.github.io</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+        <header class="intro-header" style="background-image: url('../../theme/images/header.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Serwer proxy w Ruscie (część 3)</h1>
+                        <span class="meta">nie 04 czerwiec 2017</span>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+    <!-- Post Content -->
+    <article>
+        <p>Kod dostępny <a href="https://github.com/kele/foxy/tree/part3">tutaj</a>.</p>
+<h2>Obsługa protokołu HTTP</h2>
+<p>Rust ma w miarę dojrzałą bibliotekę do obsługi protokołu HTTP - jest nią
+<a href="https://github.com/hyperium/hyper"><strong>hyper</strong></a>. Biblioteka ta jest używana m.in.
+przez <a href="https://github.com/servo/servo"><strong>Servo</strong></a>, czyli prawdopodobnie
+najpoważniejszy projekt pisany w Ruscie w tej chwili.</p>
+<p>Jednak w ramach nauki, napiszę swój własny, prosty moduł do obsługi HTTP.</p>
+<h2>Tworzenie nowego modułu</h2>
+<p>W Ruscie kod organizowany jest w paczkach (<strong>crate</strong>), a wewnątrz nich w
+modułach. Paczki możemy porównać do bibliotek w innych językach. Każda paczka ma
+swój główny moduł (<strong>root module</strong>), a jego potomkami mogą być inne moduły.</p>
+<p>Aby użyć modułu, musimy go zadeklarować:</p>
+<div class="highlight"><pre><span></span><span class="k">mod</span> <span class="nn">http</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+
+
+<p><a name="backref-1"></a>
+Rust<sup><a href="#rust-i-cargo">1</a></sup> wtedy będzie się spodziewać pliku <code>http.rs</code>
+lub <code>http/mod.rs</code>. Tam też musimy zdefiniować nasz kod.</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Słowo kluczowe <code>struct</code> pozwala na zdefiniowanie nowej struktury, natomiast
+<code>pub</code> oznacza tutaj, że chcemy, aby była ona widoczna na zewnątrz tego modułu
+(odpowiednik <code>public</code> z C++ czy Javy).</p>
+<h2>Projektowanie API i model własności</h2>
+<p>Skoro już wiemy, gdzie chcemy umieścić kod do obsługi protokołu HTTP, to nadszedł
+czas na zaprojektowanie API.</p>
+<p>Chciałbym, żeby głównym obiektem był <code>http::HttpStream</code>. Będzie on opakowaniem
+dla <code>net::TcpStream</code> z dodatkiem specyficznych dla protokołu HTTP własności.
+Będzie on też właścicielem połączenia TCP przez resztę działania programu.
+Wydaje się, że to dobry moment na napisanie trochę o modelu własności Rusta.</p>
+<h2>Model własności (<strong>ownership, borrowing</strong>)</h2>
+<p>Model własności jest prawdopodobnie najważniejszą cechą Rusta, wyróżniającą go
+na tle współczesnych języków programowania.</p>
+<p>W Ruscie, obiekt do funkcji możemy przekazać na trzy sposoby:</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">T</span><span class="p">{};</span><span class="w"></span>
+
+<span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="n">xyz</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+
+<h3><code>foo(x)</code></h3>
+<p>W przypadku <code>foo</code>, <code>x</code> przekazywany jest przez <strong>wartość</strong>. W Ruscie oznacza to
+jednak jedną z dwóch możliwości:</p>
+<ul>
+<li><code>x</code> zostanie skopiowany (jeśli implementuje cechę <code>Copy</code>, o tym później), lub</li>
+<li><code>x</code> zostanie <strong>oddany na własność</strong>.</li>
+</ul>
+<p>W tym drugim przypadku, <code>x</code> nie będzie mógł być użyty po oddaniu go innej
+funkcji! Przykładowo:</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">X</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="k">fn</span> <span class="nf">foo</span><span class="p">(</span><span class="n">x</span><span class="w"> </span>:<span class="nc">X</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">X</span><span class="p">{};</span><span class="w"></span>
+<span class="w">    </span><span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>próba kompilacji powyższego kodu skończy się błędem:</p>
+<div class="highlight"><pre><span></span>error[E0382]: use of moved value: `x`
+ --&gt; &lt;anon&gt;:7:9
+  |
+  |     foo(x);
+  |         - value moved here
+  |     foo(x);
+  |         ^ value used here after move
+  |
+  = note: move occurs because `x` has type `X`, which does not implement the `Copy` trait
+
+error: aborting due to previous error
+</pre></div>
+
+
+<p><code>x</code> zostaje tutaj <strong>oddany na własność</strong> funkcji <code>foo()</code>, co oznacza, że
+tracimy do niego dostęp. Dzięki takiej semantyce, kompilator może zrobić dwie rzeczy:</p>
+<ul>
+<li>zabronić używania <code>x</code> po tym jak został oddany (jak oddasz komuś książkę, to
+przecież nie możesz jej nadal czytać),</li>
+<li>poprawnie zdecydować, że to nie ta funkcja odpowiada za zwolnienie pamięci
+(tylko <code>foo</code>, a być może inna funkcja, której <code>foo</code> przekazuje <code>x</code>).</li>
+</ul>
+<p>W taki własnie sposób, Rust zapewnia bezpieczeństwo przy jednoczesnym braku
+kosztu w trakcie wykonania programu (nie musimy zliczać referencji do <code>x</code>, ani
+zaprzęgać do pracy garbage collectora).</p>
+<h3><code>bar(&amp;x)</code></h3>
+<p><code>&amp;x</code> w Ruscie oznacza, że zmienną <strong>pożyczamy</strong> (<strong>borrowing</strong>). Po skończonej
+pracy, <code>bar()</code> musi oddać ją nam w nienaruszonym stanie. Tzn. przekazujemy <code>x</code>
+tylko <strong>do odczytu</strong>.</p>
+<p>Wtedy, bezpiecznie można wykonać kod taki jak:</p>
+<div class="highlight"><pre><span></span><span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+
+<p>bo po każdym wywołaniu <code>bar(&amp;x)</code>, <code>x</code> trafia z powrotem w nasze ręce.
+Kompilator wie wtedy, że:</p>
+<ul>
+<li><code>bar</code> nie musi się martwić o zwalnianie pamięci dla <code>x</code>,</li>
+<li><code>bar</code> nie może trzymać <code>x</code> w nieskończoność (więcej o tym, jak długo <code>bar</code>
+może korzystać z <code>x</code> opowiem przy okazji omawiania <strong>lifetimes</strong>).</li>
+</ul>
+<h3><code>xyz(&amp;mut x)</code></h3>
+<p>Podobnie jak <code>&amp;x</code>, lecz tym razem pozwalamy zmieniać pożyczony obiekt. Dopiero
+przy omawianiu <strong>lifetimes</strong> będzie można powiedzieć coś więcej o tym jak
+różnie <code>&amp;</code> oraz <code>&amp;mut</code> są traktowane przez kompilator. Proszę o cierpliwość ;).</p>
+<h2>Projektowanie API (ciąg dalszy)</h2>
+<p>Skoro wiemy już co nieco o tym jak przekazuje się zmienne w Ruscie, możemy
+przejść do wymyślania, jak chcemy korzystać z naszego nowo utworzonego
+<code>http::HttpStream</code>. Na początek, napiszemy sobie zwykły <strong>echo server</strong>, tzn.
+będziemy odsyłać zapytania, które otrzymaliśmy.</p>
+<div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">mod</span> <span class="nn">http</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span>::<span class="n">HttpStream</span>::<span class="n">new</span><span class="p">(</span><span class="n">tcp</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// ... główna pętla znajdzie się tutaj ...</span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Z pewnością potrzebujemy <strong>oddać</strong> połączenie TCP nowemu obiektowi <code>HttpStream</code>
+(nie chcemy, aby ktokolwiek inny mógł pisać do tego samego gniazda) i posłuży
+nam do tego funkcja <code>new</code>. W tej chwili, <code>HttpStream</code> będzie wyglądać tak:</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">tcp</span>: <span class="nc">tcp</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p><code>impl</code> służy do implementowania metod dla danej struktury. Jak widać, zamiast
+dodawać słowo kluczowe <code>pub</code> przed <code>impl</code>, robi się to na poziomie pojedynczych
+metod. W tym przypadku, <code>new</code> jest <strong>associated function</strong> (w innych językach
+nazwalibyśmy ją metodą statyczną (static method)), co oznacza, że nie potrzebuje
+przyjmować obiektu tego typu jako swojego argumentu (ale dalej ma dostęp do
+prywatnych pól). Stąd też wywołuje się ją jako <code>HttpStream::new()</code> zamiast
+<code>h.new()</code>.</p>
+<p>Jedynym zadaniem <code>new</code> jest przekazanie <code>tcp</code> do <code>HttpStream</code>. Robimy to, bo nie
+chcemy, aby <code>tcp</code> było publicznym polem <code>HttpStream</code> (przynajmniej na razie).</p>
+<div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">mod</span> <span class="nn">http</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span>::<span class="n">HttpStream</span>::<span class="n">new</span><span class="p">{</span><span class="n">tcp</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="o">!</span><span class="n">h</span><span class="p">.</span><span class="n">is_closed</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while getting http request: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w"></span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// ...</span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Pojawiły się dwie nowe metody: <code>is_closed()</code> oraz <code>get()</code>.</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">io</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">get</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="n">HttpPacket</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// TODO</span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="n">HttpPacket</span><span class="w"> </span><span class="p">{})</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">is_closed</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="kt">bool</span> <span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// TODO</span>
+<span class="w">        </span><span class="kc">false</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p><code>get</code> będzie służyć do odbierania pakietów HTTP (<code>HttpPacket</code>), w związku z tym:</p>
+<ul>
+<li>musi mieć możliwość zmiany pola <code>tcp</code>, stąd <code>get</code> przyjmuje mutowalną
+  referencję (<code>&amp;mut</code>) do obiektu typu <code>HttpStream</code> (<code>self</code>, podobnie jak w
+  Pythonie),</li>
+<li>zwraca <code>io::Result&lt;HttpPacket&gt;</code>, bo tak <a href="serwer-proxy-w-ruscie-czesc-2.html">jak już
+  wspominałem</a>, coś może podczas
+  odczytywania pójść nie tak i chciałbym mieć możliwość obsługi błędu,</li>
+<li>na razie implementacja ogranicza się do zwrócenia <code>Ok(HttpPacket {})</code>, czyli
+  pustego pakietu (gdybym chciał zwrócić błąd, użyłbym <code>Err</code> zamiast <code>Ok</code>).</li>
+</ul>
+<p><code>is_closed</code> natomiast, po prostu odpowiada na pytanie, czy połączenie zostało
+zamknięte.</p>
+<p>Jak widać, potrzebna jest nam nowa struktura, <code>HttpPacket</code>, która będzie
+reprezentować pojedynczy pakiet HTTP.</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpPacket</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Pozostało teraz dopisać linijkę, odpowiadającą za odsyłanie odpowiedzi.</p>
+<div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span>::<span class="n">HttpStream</span>::<span class="n">new</span><span class="p">{</span><span class="n">tcp</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="o">!</span><span class="n">h</span><span class="p">.</span><span class="n">is_closed</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while getting http request: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w"></span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="n">h</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">http</span>::<span class="n">HttpPacket</span><span class="p">{});</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Oraz odpowiednią (pustą, na razie) implementację <code>send</code>:</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">send</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span>: <span class="kp">&amp;</span><span class="nc">HttpPacket</span><span class="p">)</span><span class="w"> </span><span class="n">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p><code>send</code> może zwrócić błąd, ale poza tym, nie zwraca niczego interesującego. W
+takim wypadku, przydaje się typ <code>()</code> (unit), podobny do <code>void</code> znanego z innych
+języków.</p>
+<h2>Podsumowanie</h2>
+<p>Jak widać, nie udało się napisać nam jeszcze niczego co jakkolwiek sensownie
+działa, ale przebrnęliśmy przez kilka kluczowych cech Rusta, bez których
+jakiekolwiek zrozumienie dowolnego kodu byłoby niemożliwe.</p>
+<p>Mam nadzieję, ze w kolejnym poście uda mi się zaimplementować prosty serwer
+echo.</p>
+<h1>Pozostałe części</h1>
+<ul>
+<li><a href="serwer-proxy-w-ruscie-czesc-4.html">następny post (część 4)</a></li>
+<li><a href="serwer-proxy-w-ruscie-czesc-2.html">poprzedni post (część 2)</a></li>
+</ul>
+<hr>
+
+<h3>Przypisy</h3>
+<p><a name="rust-i-cargo"></a><sup>1</sup> W oficjalnej dokumentacji przez "Rust" rozumie się
+zarówno sam język jak i <code>cargo</code>. (<a href="#backref-1">wróć do tekstu</a>)</p>
+    </article>
+
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <ul class="list-inline text-center">
+                    </ul>
+<p class="copyright text-muted">
+    Blog powered by <a href="http://getpelican.com">Pelican</a>,
+    which takes great advantage of <a href="http://python.org">Python</a>.
+</p>                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="../../theme/js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../../theme/js/bootstrap.min.js"></script>
+
+        <!-- Custom Theme JavaScript -->
+        <script src="../../theme/js/clean-blog.min.js"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+            <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+
+        <title>Serwer proxy w Ruscie (część 4)</title>
+
+            <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
+            <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
+
+        <!-- Bootstrap Core CSS -->
+        <link href="../theme/css/bootstrap.css" rel="stylesheet">
+
+        <!-- Custom CSS -->
+        <link href="../theme/css/clean-blog.css" rel="stylesheet">
+
+        <!-- Code highlight color scheme -->
+            <link href="../theme/css/code_blocks/darkly.css" rel="stylesheet">
+
+
+        <!-- Custom Fonts -->
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+
+
+
+        <meta name="tags" contents="rust" />
+        <meta name="tags" contents="foxy" />
+
+
+	                <meta property="og:locale" content="pl_PL.utf8">
+		<meta property="og:site_name" content="kele.github.io">
+
+	<meta property="og:type" content="article">
+	<meta property="article:author" content="">
+	<meta property="og:url" content="../drafts/serwer-proxy-w-ruscie-czesc-4-en.html">
+	<meta property="og:title" content="Serwer proxy w Ruscie (część 4)">
+	<meta property="og:description" content="">
+	<meta property="og:image" content="../">
+	<meta property="article:published_time" content="2017-06-05 00:00:00+02:00">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../">kele.github.io</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+        <header class="intro-header" style="background-image: url('../theme/images/header.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Serwer proxy w Ruscie (część 4)</h1>
+                        <span class="meta">pon 05 czerwiec 2017</span>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+    <!-- Post Content -->
+    <article>
+        <p>Kod dostępny <a href="https://github.com/kele/foxy/tree/part4">tutaj</a>.</p>
+<h2>Projektowanie API - ciąg dalszy</h2>
+<h3>Stara definicja <code>HttpPacket</code></h3>
+<p>W poprzednim poście naszkicowaliśmy API <code>HttpStream</code>, tak, że zawiera m.in.
+metody <code>get</code> oraz <code>send</code>, które przyjmują bądź zwracają <code>HttpPacket</code>.</p>
+<div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpPacket</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Tak wyglądała nasza robocza definicja <code>HttpPacket</code>. Ktokolwiek jednak miał do
+czynienia z protokołem HTTP, wie jednak, że mozemy podzielić pakiety na
+zapytania (request) i odpowiedzi (response).</p>
+<h4>Przykładowe zapytanie</h4>
+<div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/hello.htm</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">User-Agent</span><span class="o">:</span> <span class="l">Mozilla/4.0 (compatible; MSIE5.01; Windows NT)</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">www.tutorialspoint.com</span>
+<span class="na">Accept-Language</span><span class="o">:</span> <span class="l">en-us</span>
+<span class="na">Accept-Encoding</span><span class="o">:</span> <span class="l">gzip, deflate</span>
+<span class="na">Connection</span><span class="o">:</span> <span class="l">Keep-Alive</span>
+</pre></div>
+
+
+<h4>Przykładowa odpowiedź</h4>
+<div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Date</span><span class="o">:</span> <span class="l">Mon, 27 Jul 2009 12:28:53 GMT</span>
+<span class="na">Server</span><span class="o">:</span> <span class="l">Apache/2.2.14 (Win32)</span>
+<span class="na">Last-Modified</span><span class="o">:</span> <span class="l">Wed, 22 Jul 2009 19:15:56 GMT</span>
+<span class="na">Content-Length</span><span class="o">:</span> <span class="l">88</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">text/html</span>
+<span class="na">Connection</span><span class="o">:</span> <span class="l">Closed</span>
+
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Hello, World!<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+
+
+<h3><code>get</code> -&gt; <code>get_request</code></h3>
+<p>W związku z powyższym, przemianujemy <code>get</code> na <code>get_request</code>.</p>
+<h3><code>HttpRequest</code> oraz <code>HttpResponse</code> zamiast <code>HttpPacket</code></h3>
+<p>Na razie będziemy po prostu trzymać w nich jedynie <code>string::String</code>. Z czasem
+będziemy dodawać do tych stuktur m.in. informacje o kodzie odpowiedzi, rodzaju
+zapytania, wersji protokołu HTTP, URI i wiele innych rzeczy.</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+<span class="c1">// ...</span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpRequest</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="n">data</span>: <span class="nc">string</span>::<span class="nb">String</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpResponse</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="n">data</span>: <span class="nc">string</span>::<span class="nb">String</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<h3>Implementacja <code>get_request</code></h3>
+<p>Nagłówek pakietu HTTP zawsze kończy się dwoma znakami nowej linii, więc
+chcielibyśmy mieć możliwość czytania z naszego gniazda bajt po bajcie, aż
+napotkamy <code>"\n\n"</code>. Możemy do tego celu wykorzystać <code>std::io::Bytes</code>, który jest
+iteratorem po pojedynczych bajtach dla typów mających cechę (trait)
+<code>std::io::Read</code>.</p>
+<p>Jak możemy przeczytać w dokumentacji, dla <code>std::net::TcpStream</code> zaimplementowano
+cechę <code>Read</code>. Problem w tym, że gdybyśmy chcieli czytać z <code>TcpStream</code> bajt po
+bajcie, musielibyśmy w kółko wywoływać metodę <code>read()</code>, która to najzwyczajniej
+w świecie wykonywałaby wywołanie systemowe z prośbą o jeden bajt. Byłoby to
+strasznie wolne. Na szczęście, nawet dokumentacja Rusta wspomina o tym problemie
+i daje gotowe rozwiązanie: <code>std::io::BufReader</code>. Typ ten opakowuje coś co
+spełnia <code>std::io::Read</code> i czyta z tego do wewnętrznego bufora, minimalizując w
+ten sposób liczbę wywołań systemowych. My możemy wtedy, bez utraty wydajności,
+czytać z <code>BufReader</code> bajt po bajcie.</p>
+<p>Jak wspomniałem, <code>Bytes</code> jest iteratorem, więc aby wziąc z niego kolejny
+element, korzystamy z metody <code>next()</code>.</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+<span class="c1">// ...</span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">get_request</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="w">    </span><span class="k">loop</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">tcp_bytes</span><span class="p">.</span><span class="n">next</span><span class="p">().</span><span class="n">unwrap</span><span class="p">().</span><span class="n">unwrap</span><span class="p">()</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">char</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// ...</span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p><code>as char</code>, jak się można domyślić, służy po prostu do rzutowania na typ <code>char</code>
+(podstawowy typ do reprezentacji znaku w Ruscie), w tym wypadku z <code>u8</code> (bajt).
+Do czego służą <code>unwrap()</code>? Metoda ta jest zdefiniowana m.in. dla typów <code>Result</code>
+oraz <code>Option</code>. <code>Result</code> może przechowywać <code>Ok</code> (wartość) lub <code>Err</code> (błąd),
+natomiast <code>Option</code> może przechowayć <code>Some</code> (wartość) lub <code>None</code> (nic).
+<code>unwrap()</code> dla obu tych typów ma takie same działanie, tzn.:</p>
+<ul>
+<li>jeśli obiekt reprezentuje wartość (<code>Ok</code> lub <code>Some</code>), zwróc ją (bez
+  opakowania),</li>
+<li>jeśli jednak nie jest to poprawna wartość (czyli <code>Err</code> lub <code>None</code>),
+  wykonaj <code>panic!</code> (na ogół rownoważne z zakończeniem działania programu).</li>
+</ul>
+<p>W przypadku iteratora <code>Bytes</code>, <code>next()</code> zwraca <code>Option&lt;Result&lt;u8&gt;&gt;</code>. Jeśli nie
+ma już więcej danych, zwrócone zostanie <code>None</code>, jeśli jednak otrzymaliśmy z
+powrotem coś od wywołanego pod spodem <code>read()</code>, otrzymamy <code>Some(x)</code>, gdzie <code>x</code>
+będzie odczytanym bajtem (<code>Ok(b)</code>) lub błędem (<code>Err(e)</code>). Stąd potrzebne są nam
+dwa <code>unwrap()</code>'.</p>
+<p>Pełna implementacja <code>get_request</code>:</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+<span class="c1">// ...</span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">get_request</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="n">HttpRequest</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// TODO: error handling</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">lastChar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">packet</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">string</span>::<span class="nb">String</span>::<span class="n">new</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">loop</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">tcp_bytes</span><span class="p">.</span><span class="n">next</span><span class="p">().</span><span class="n">unwrap</span><span class="p">().</span><span class="n">unwrap</span><span class="p">()</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">char</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">packet</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">lastChar</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">lastChar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">HttpRequest</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">data</span>: <span class="nc">packet</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Na razie, w przypadku jakiegokolwiek błędu, będziemy poprostu kończyć pracę
+programu (poprzez <code>unwrap()</code>).</p>
+<h3>Dzielenie obiektów</h3>
+<p>W <code>get_request</code> korzystaliśmy z <code>self.tcp_bytes</code>. Wcześniej, <code>HttpStream</code>
+składał się z <code>tcp</code> typu <code>net::TcpStream</code>. Teraz, będziemy mieć tam nowe pole,
+typu <code>io::Bytes&lt;io::BufReader&lt;net::TcpStream&gt;&gt;</code> (iterator po bajtach odczytanych
+z <code>TcpStream</code> z buforowaniem). Problem w tym, że taki typ bierze sobie
+<code>TcpStream</code> na własność. A my, oprócz odbierania danych, chcielibyśmy także coś
+wysyłać!</p>
+<p><a name="backref-1"></a>
+W językach z garbage collectorem dzielenie obiektów jest całkiem łatwe. W
+językach typu C++, możemy skorzystać z dobrodziejstw typu <code>std::shared_ptr</code> lub
+referencji. Jakie problemy niosą za sobą te rozwiązania?</p>
+<ul>
+<li>garbage collector wiąże się ze spadkiem wydajności i marnymi gwarancjami co do
+  tego, kiedy zasoby zostaną zwolnione,</li>
+<li><code>std::shared_ptr</code> to zliczanie referencji, które też wiąże się z pewnym
+  narzutem wpływającym na wydajność (poza tym, obiekt
+  musi<sup><a href="#shared-ptr">1</a></sup> być zaalokowany na stercie),</li>
+<li>referencje nie są bezpieczne (<a href="https://en.wikipedia.org/wiki/Dangling_pointer"><strong>dangling reference</strong></a>).</li>
+</ul>
+<p>Rust jest nastawiony bardzo mocno na bezpieczeństwo (memory safety) oraz
+wydajność. Oczywiście moglibyśmy zwyczajnie skorzystać ze zliczania referencji
+<code>alloc::rc::Rc</code>, ale nie zyskalibyśmy wtedy zbyt wiele w stosunku do
+<code>std::shared_ptr</code> znanego z C++.</p>
+<p><a name="backref-2"></a>
+Skorzystamy więc z referencji. Jak mieć w języku referencje, a jednocześnie nie
+pozwolić na możliwość zaistnienia wspomnianego wyżej problemu <strong>dangling
+reference</strong><sup><a href="#dangling-tlumaczenie">2</a></sup>?</p>
+<p>Możemy powiedzieć kompilatorowi, jak długo obiekty będą żyć!</p>
+<h3>Lifetimes</h3>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+<span class="c1">// ...</span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpStream</span><span class="o">&lt;</span><span class="na">&#39;a</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">tcp</span>: <span class="kp">&amp;</span><span class="na">&#39;a</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpStream</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tcp_bytes</span>: <span class="nc">io</span>::<span class="n">Bytes</span><span class="o">&lt;</span><span class="n">io</span>::<span class="n">BufReader</span><span class="o">&lt;&amp;</span><span class="na">&#39;a</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpStream</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="o">&lt;</span><span class="na">&#39;a</span><span class="o">&gt;</span><span class="w"> </span><span class="n">HttpStream</span><span class="o">&lt;</span><span class="na">&#39;a</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">tcp</span>: <span class="kp">&amp;</span><span class="na">&#39;a</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">HttpStream</span><span class="o">&lt;</span><span class="na">&#39;a</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">tcp</span>: <span class="nc">tcp</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">tcp_bytes</span>: <span class="nc">io</span>::<span class="n">BufReader</span>::<span class="n">new</span><span class="p">(</span><span class="n">tcp</span><span class="p">).</span><span class="n">bytes</span><span class="p">(),</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>W Ruscie kiedykolwiek zobaczymy nazwę zaczynającą się od <code>'</code>, jak np <code>'a</code> lub
+<code>'static</code>, będzie to oznaczenie lifetime'u. W przypadku powyższego kodu, mówimy
+kompilatorowi, że:</p>
+<ul>
+<li><code>HttpStream</code>, jako jeden z parametrów, przyjmuje lifetime (wewnątrz definicji
+  <code>HttpStream</code> nazwiemy go <code>'a</code>),</li>
+<li><code>tcp</code> jest referencją na obiekt <code>net::TcpStream</code> o lifetime <code>'a</code>,</li>
+<li><code>tcp_bytes</code> jest iteratorem <code>Bytes</code> po buforowanym <code>Reader</code>, <code>Reader</code> ten jest
+  referencją na obiekt typu <code>net::TcpStream</code> o lifetime <code>'a</code>.</li>
+</ul>
+<p>Co zyskujemy dzięki temu, że dodaliśmy kilka <code>'a</code> tu i ówdzie? Kompilator wie,
+że <code>tcp_bytes</code> będzie trzymać referencje na <code>net::TcpStream</code> tak długo jak robi
+to struktura <code>HttpStream</code>, której jest częścią. Dzięku temu, <code>Bytes</code> oraz
+<code>BufReader</code>, które składają się na <code>tcp_bytes</code>, <strong>zawsze będą wskazywać na żywy
+obiekt</strong> <code>net::TcpStream</code>. Za kilka dodatkowych znaków ustrzegliśmy się przed
+problemem dangling reference <strong>w czasie kompilacji!</strong> Bezpieczeństwo przy
+zerowym koszcie wykonania, tego oczekiwaliśmy od Rusta.</p>
+<p>Tak naprawdę to kiedykolwiek w Ruscie korzystamy z referencji, korzystamy także
+z lifetimes. Tyle tylko, że często kompilator potrafi sam się domyślić, skąd
+wziąc informację o tym jak długo obiekt będzie żył. Technika ta nazywa się
+<strong>lifetime elision</strong>.</p>
+<h3><code>send()</code></h3>
+<p>Implementacja <code>send()</code>, która ma po prostu wysłać jakieś dane (bez układania ich
+w prawdziwy pakiet HTTP) jest trywialna:</p>
+<div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
+<span class="c1">// ...</span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">send</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">resp</span>: <span class="kp">&amp;</span><span class="nc">HttpResponse</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// TODO: error handling</span>
+<span class="w">    </span><span class="bp">self</span><span class="p">.</span><span class="n">tcp</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">resp</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">to_string</span><span class="p">().</span><span class="n">as_bytes</span><span class="p">());</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<h3>Zmiany w głównej pętli</h3>
+<p>Zmieniliśmy <code>HttpPacket</code> na <code>HttpResponse</code> i
+<code>HttpRequest</code>. Oprócz tego, <code>HttpStream</code> przyjmuje teraz <code>net::TcpStream</code> przez
+referencję (a nie na własność). W związku z tym nowa główna pętla wygląda teraz
+tak:</p>
+<div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
+<span class="c1">// ...</span>
+
+<span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span>::<span class="n">HttpStream</span>::<span class="n">new</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tcp</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="o">!</span><span class="n">h</span><span class="p">.</span><span class="n">is_closed</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">get_request</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while getting http request: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w"></span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="n">h</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">http</span>::<span class="n">HttpResponse</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">data</span>: <span class="nc">request</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">clone</span><span class="p">()</span><span class="w"> </span><span class="p">});</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p><code>clone()</code> jest metodą, która kopiuje obiekt typu <code>string::String</code>. Jest to jedna
+z metod typów, które implementują cechę <code>Clonable</code>.</p>
+<h2>Podsumowanie</h2>
+<p>Udało się nam napisać proste funkcje <code>get_request()</code> oraz <code>send()</code>, co pozwala
+na implementację serwera echo. Jak sprawdzić jego działanie? Można zrobić, np.:</p>
+<div class="highlight"><pre><span></span>cat <span class="p">|</span> netcat <span class="m">127</span>.0.0.1 <span class="m">4000</span>
+</pre></div>
+
+
+<p>i zacząć pisać. Pamiętać trzeba, że tylko przy naciśnięciu klawisza enter dwa
+razy z rzędu, nasz serwer wyśle odpowiedź.</p>
+<p>W kolejnych częściach zajmiemy się obsługą błędów (<code>unwrap()</code> nie powinno
+przejść code review w tym przypadku) oraz tym, co tak naprawdę znajduje się w
+pakietach HTTP.</p>
+<h1>Pozostałe części</h1>
+<ul>
+<li><a href="serwer-proxy-w-ruscie-czesc-5.html">następny post (część 5) (obsługa błędów)</a></li>
+<li><a href="serwer-proxy-w-ruscie-czesc-3.html">poprzedni post (część 3)</a></li>
+</ul>
+<h3>Przypisy</h3>
+<p><a name="shared-ptr"></a><sup>1</sup> Możliwe jest, aby <code>shared_ptr</code> wskazywał
+na obiekty na stosie, albo na zasoby zupełnie innego typu (np. pliki), ale żeby
+zrobić to dobrze, potrzeba naprawdę solidnej wiedzy dotyczącej zaawansowanego
+C++. Nawet wtedy, nie musi to być bezpiecznym rozwiązaniem.
+(<a href="#backref-1">wróć do tekstu</a>)</p>
+<p><a name="dangling-tlumaczenie"></a><sup>2</sup> Przykro mi, "wiszące referencje"
+nie brzmi najlepiej.
+(<a href="#backref-1">wróć do tekstu</a>)</p>
+    </article>
+
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <ul class="list-inline text-center">
+                    </ul>
+<p class="copyright text-muted">
+    Blog powered by <a href="http://getpelican.com">Pelican</a>,
+    which takes great advantage of <a href="http://python.org">Python</a>.
+</p>                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="../theme/js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../theme/js/bootstrap.min.js"></script>
+
+        <!-- Custom Theme JavaScript -->
+        <script src="../theme/js/clean-blog.min.js"></script>
+
+
+</body>
+
+</html>
