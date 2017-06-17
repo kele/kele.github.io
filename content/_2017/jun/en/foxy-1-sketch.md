@@ -1,5 +1,5 @@
 Title: Proxy server in Rust (part 1)
-Date: 2017-06-07
+Date: 2017-06-17
 Category: rust
 Tags: rust, foxy
 Summary: Learning Rust by writing a simple proxy server.
