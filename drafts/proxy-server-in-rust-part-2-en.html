@@ -9,7 +9,7 @@
         <meta name="author" content="">
 
 
-        <title>Serwer proxy w Ruscie (część 2)</title>
+        <title>Proxy server in Rust (part 2)</title>
 
             <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
             <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
@@ -48,11 +48,11 @@
 
 	<meta property="og:type" content="article">
 	<meta property="article:author" content="">
-	<meta property="og:url" content="../drafts/serwer-proxy-w-ruscie-czesc-2-en.html">
-	<meta property="og:title" content="Serwer proxy w Ruscie (część 2)">
+	<meta property="og:url" content="../drafts/proxy-server-in-rust-part-2-en.html">
+	<meta property="og:title" content="Proxy server in Rust (part 2)">
 	<meta property="og:description" content="">
 	<meta property="og:image" content="../">
-	<meta property="article:published_time" content="2017-06-03 00:00:00+02:00">
+	<meta property="article:published_time" content="2017-06-18 00:00:00+02:00">
 </head>
 
 <body>
@@ -88,8 +88,8 @@
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     <div class="post-heading">
-                        <h1>Serwer proxy w Ruscie (część 2)</h1>
-                        <span class="meta">sob 03 czerwiec 2017</span>
+                        <h1>Proxy server in Rust (part 2)</h1>
+                        <span class="meta">nie 18 czerwiec 2017</span>
                         
                     </div>
                 </div>
@@ -103,8 +103,8 @@
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
     <!-- Post Content -->
     <article>
-        <h2>Posłuchajmy czegoś po TCP</h2>
-<p>Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):</p>
+        <h2>Let's listen over TCP</h2>
+<p>This is how a draft of the main source file looks like (explanations below): </p>
 <div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
 
 <span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
@@ -126,50 +126,50 @@
 </pre></div>
 
 
-<h3>Nasłuchiwanie</h3>
-<p>Używać będziemy paczki (<strong>crate</strong>)
-<a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>. Robimy to za pomocą:</p>
+<h3>Listening</h3>
+<p>We're going to use <strong>crate</strong>
+<a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>:</p>
 <div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 
 
-<p>Użyjemy funkcji
-<a href="https://doc.rust-lang.org/std/net/struct.TcpListener.html"><code>std::net::TcpListener::bind</code></a>,
-żeby zacząć nasłuchiwać na porcie 4000 lokalnej maszyny:</p>
+<p><a href="https://doc.rust-lang.org/std/net/struct.TcpListener.html"><code>std::net::TcpListener::bind</code></a>
+function is used here to start listening on port 4000 of the localhost.</p>
 <div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">PROXY_PORT</span>: <span class="kt">u16</span> <span class="o">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">;</span><span class="w"></span>
 <span class="kd">let</span><span class="w"> </span><span class="n">listener</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">net</span>::<span class="n">TcpListener</span>::<span class="n">bind</span><span class="p">((</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PROXY_PORT</span><span class="p">)).</span><span class="n">unwrap</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 
 
-<p><code>u16</code> to odpowiednik <code>uint16</code>, zatem <code>const PROXY_PORT: u16 = 4000;</code> jest po
-prostu deklaracją stałej <code>PROXY_PORT</code> typu liczba naturalnia 16-bitowa o
-wartości 4000.</p>
-<p>Czym jest tajemnicze <code>unwrap()</code> na końcu? Rust jest językiem nastawionym przede
-wszystkim na bezpieczeństwo, wymuszane już w czasie kompilacji. Na czym to
-dokładnie polega w tym przypadku? <code>bind()</code> mógłby zwyczajnie zwrócić
-<code>TcpListener</code>, jednak zamiast tego zwraca
+<p><code>u16</code> corresponds to <code>uint16</code> known from other languages, so <code>const PROXY_PORT:
+u16 = 4000;</code> is a definition of a <code>PROXY_PORT</code> constant 16-bit integer equal to
+4000.</p>
+<p>What about the mysterious <code>unwrap()</code> at the end? Rust is a language designed
+with safety with minimal runtime overhead in mind. How is this achieved in this
+case? <code>bind()</code> could've simply returned <code>TcpListener</code>, but instead it returns
 <a href="https://doc.rust-lang.org/std/io/type.Result.html"><code>std::io::Result&lt;TcpListener&gt;</code></a>.</p>
-<p>Co to za różnica?</p>
-<p>Coś po drodze może pójść nie tak (np. port może być już zajęty). Można radzić sobie z tym na różne sposoby:</p>
+<p>What's the difference?</p>
+<p>Something can go wrong while trying to bind the socket (i.e. the port can be
+already in use). This can be handled in many different ways (all with different
+trade offs):</p>
 <ul>
-<li>rzucając wyjątek (Java, C++?),</li>
-<li>zwracając wskaźnik (C, C++),</li>
-<li>zwracając dwie wartości <code>(TcpListener, bool)</code> (Go),</li>
+<li>throwing an exception (Java, C++?),</li>
+<li>returning a pointer (C, C++),</li>
+<li>returning two values <code>(TcpListener, bool)</code> (Go),</li>
 <li><a href="http://en.cppreference.com/w/cpp/utility/optional"><code>std::optional</code></a> (C++17).</li>
 </ul>
-<p>Rzucenie wyjątku nie wymusza na programiście obsłużenia go. Zwracanie wskaźnika
-czy wartości typu <code>bool</code> również. <code>std::optional</code> wystarczy ominąć prostym <code>*</code>.
-Rust idzie jednak inną drogą. Zamiast powyższych rozwiązań, zwracane jest
-opakowanie (<code>Result</code>), które może zawierać oczekiwaną przez nas
-wartość <code>TcpListener</code> lub błąd (<code>Error</code>)!</p>
-<p>W związku z tym, że rozpoczęcie
-nasłuchiwania na jakimś porcie jest kluczowe dla działania programu, jedyne co
-robię, to rozpakowuję wynik (<code>unwrap()</code>).</p>
-<p>Cóż robi ta tajemnicza metoda? Jeśli nie było błędu - zwraca wartość. Jeśli
-pojawił się błąd, wykonuje się
-<a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panic!</code></a> (odpowiednik
-<a href="https://blog.golang.org/defer-panic-and-recover"><code>panic</code></a> z Go).</p>
-<h3>Akceptowanie połączenia</h3>
+<p>Throwing an exception does not make the programmer handle it. Retruning a
+pointer or a <code>bool</code> value does not help here either. <code>std::optional</code> can be
+simply ignored using <code>*</code>. Rust tries to follow a different path. Instead of the
+abovementioned solutions, an object is returned in a wrapping (<code>Result</code>). This
+type can be one of the two: the expected value of type <code>TcpListener</code> or an error
+(<code>Error</code>)!</p>
+<p>Since binding a socket to a port is vital for this program to run, the only
+thing I do here is <code>unwrap()</code> the result.</p>
+<p>What does this method do? If there is no error - the value is returned. If an
+error happened, <a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panic!</code></a> is
+called (similar to <a href="https://blog.golang.org/defer-panic-and-recover"><code>panic</code></a>
+known from Go).</p>
+<h3>Accepting a connection</h3>
 <div class="highlight"><pre><span></span><span class="k">match</span><span class="w"> </span><span class="n">listener</span><span class="p">.</span><span class="n">accept</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nb">Ok</span><span class="p">((</span><span class="n">sock</span><span class="p">,</span><span class="w"> </span><span class="n">_</span><span class="p">))</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">handle_connection</span><span class="p">(</span><span class="n">sock</span><span class="p">),</span><span class="w"></span>
 <span class="w">    </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">panic</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while accepting connection: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">),</span><span class="w"></span>
@@ -177,40 +177,40 @@ pojawił się błąd, wykonuje się
 </pre></div>
 
 
-<p>Jeśli udało się poprawnie zaakceptować połączenie, wywołajmy
-<code>handle_connection(sock)</code>, które zajmie się dalszą obsługą połączenia.</p>
-<p>Jeśli nie - <code>panic!</code> z odpowiednim komunikatem o błędzie.</p>
+<p>If everything wen't smoothly, let's call <code>handle_connection(sock)</code>, which will
+take care of the rest.</p>
+<p>If not, <code>panic!</code> with an appropriate error message.</p>
 <h3>Pattern matching (<code>match</code>)</h3>
-<p><code>match</code> jest konstrukcją, która jest spotykana raczej w językach funkcyjnych
-(OCaml, Haskell, Lisp) niż w imperatywnych (C, Python, Java, C++), dlatego
-chciałbym poświęcić jej parę zdań.</p>
-<p><a href="https://en.wikipedia.org/wiki/Pattern_matching"><strong>Pattern matching</strong></a>, bo tak
-nazywa się ta konstrukcja, służy do:</p>
+<p><code>match</code> is a language construct used mostly in functional languages (like
+OCaml, Haskell, Lisp) rather than imperative ones (C, Python, Java, C++) and
+that's why I'd like to say a few words about it.</p>
+<p><a href="https://en.wikipedia.org/wiki/Pattern_matching"><strong>Pattern matching</strong></a> is used
+for:</p>
 <ul>
-<li>sprawdzania, czy obiekt jest taki jak nam się wydaje (w powyższym przypadku,
-  czy to jest <code>Ok</code> (prawidłowa wartość) czy <code>Err</code> (błąd)),</li>
-<li>rozłożenia go na mniejsze porcje (<code>Ok</code> w powyższym przykładzie składa się z
-  dwóch cześci, pierwszą jest socket, drugą adres, adres ignoruję (poprzez <code>_</code>),
-  ale socket zapamiętuję jako <code>sock</code>),</li>
+<li>checking whether the object is what we think it is (in the above code, whether
+  it's <code>Ok</code> (value) or <code>Err</code> (an error)</li>
+<li>dissecting it (<code>Ok</code> is here made of two parts, the first one is the TCP
+  socket, the second is the address; I'm ignoring the adress (using <code>_</code>), but
+  binding the <code>sock</code> variable to the socket).</li>
 </ul>
-<p>Przykładowo, gdbyśmy pisali kalkulator oparty na drzewach wyrażen
-arytmetycznych, pewna częśc kodu mogłaby wyglądać tak:</p>
+<p>For example, if we were to write a simple calculator based on trees of
+arithmetic expressions, a part of code might have looked like this:</p>
 <div class="highlight"><pre><span></span><span class="k">match</span><span class="w"> </span><span class="n">expression</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">Add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">Sub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">Div</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Sub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Div</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
 
-<p>Taka konstrukcja w językach programowania jest możliwa dzięki istnieniu
-specjalnych typów, które są alternatywą różnych wartości. Tzn. wyrażenie
-arytmetyczne może być dodawaniem, odejmowaniem, mnożeniem lub dzieleniem.
-Informacja o tym, czym właściwie jest dane wyrażenie, jest zapisywana i
-sprawdzana w czasie wykonania programu. To co jest ważne, to fakt, że kompilator
-wie, jakie są wszystkie możliwe alternatywy (i może nas ostrzec, gdy o którejś
-zapomnimy!). W C++ możnaby to symulować w taki sposób:</p>
+<p>This language construct is possible thanks to types that are an disjunction of
+different possible values. In this case it means that the expression can be i.e.
+an addition or substraction. The information about the kind of expression is
+stored and retrieved at runtime. What's important is the fact that the compiler
+can check whether we've covered all the possible kinds (and warn us if we forget
+about one).</p>
+<p>We could've simulated it in C++ in a following way:</p>
 <div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">Type</span> <span class="p">{</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Sub</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Div</span> <span class="p">};</span>
 
 <span class="k">struct</span> <span class="n">Expression</span> <span class="p">{</span>
@@ -232,33 +232,32 @@ zapomnimy!). W C++ możnaby to symulować w taki sposób:</p>
 </pre></div>
 
 
-<p>Jak widać, pattern matching jest dość wygodny. W językach, które go wspierają,
-implementacja jest na ogół wydajniejsza niż to co pokazałem powyżej w C++.
-Niestety, za mało jeszcze wiem o Ruscie, żeby wiedzieć jak wyglądają jego
-wewnętrzne mechanizmy w tym wypadku.</p>
-<h3><code>panic!</code> oraz <code>{}</code></h3>
-<p><code>panic!</code> jest makrem (na razie możemy traktować to jako funkcję, lecz <code>!</code> jest w
-Ruscie sygnałem, że w istocie jest to makro), które używane jest w przypadku
-krytycznych dla działania programu błędów.</p>
-<p><code>panic!</code> przyjmuje argumenty podobne do <code>printf</code> znanego z wielu innych języków,
-tyle tylko, że <code>{}</code> pozwala na wyświetlenie wartości dowolnego (no, nie do
-końca, ale o tym kiedy indziej) typu.</p>
-<h2>Co dalej?</h2>
-<p>W kolejnych postach planuję omówić:</p>
+<p>As you can see, pattern matching is pretty convenient. In the languages that
+support it natively, the implementation is better than what I have shown here in
+C++. Unfortunately, I don't know enough about Rust to talk about it's internals
+in this case.</p>
+<h3><code>panic!</code> and <code>{}</code></h3>
+<p><code>panic!</code> is a macro (right now we can think of it as a function, but <code>!</code> in Rust
+is an indicator of a macro call) used for critical program errors.</p>
+<p><code>panic!</code> receives an argument list similar to <code>printf</code> known from other
+programming languages, and <code>{}</code> is used to print the values of any type (not
+exactly, more on that later).</p>
+<h2>What's coming up?</h2>
+<p>In the next posts I plan to talk about:</p>
 <ul>
-<li>obsługę zapytań w różnych wątkach,</li>
-<li>semantykę własności i pożyczania (ownership and borrowing) (jest to główna
-  cecha wyróżniająca Rust na tle innych popularnych języków programowania),</li>
-<li>tworzenie włąsnych struktur,</li>
-<li>metody,</li>
-<li>implementacje cech (trait),</li>
-<li>wyrażenia i rozkazy (expressions and statements),</li>
-<li>i wiele innych.</li>
+<li>handling HTTP requests in different threads</li>
+<li>ownership and borrowing (the main characteristic of Rust that differentiates
+  it from popular modern programming languages)</li>
+<li>creating structures</li>
+<li>methods</li>
+<li>traits</li>
+<li>expressions and statements</li>
+<li>and many, many more.</li>
 </ul>
-<h1>Pozostałe części</h1>
+<h1>Other parts</h1>
 <ul>
-<li><a href="serwer-proxy-w-ruscie-czesc-3.html">następny post (część 3)</a></li>
-<li><a href="serwer-proxy-w-ruscie-czesc-1.html">poprzedni post (część 1)</a></li>
+<li><a href="proxy-server-in-rust-part-3.html">next post (part 3)</a></li>
+<li><a href="proxy-server-in-rust-part-1.html">previous post (part 1)</a></li>
 </ul>
     </article>
 
