@@ -1,34 +1,35 @@
-Title: Serwer proxy w Ruscie (część 3)
-Date: 2017-06-04
+Title: Proxy server in Rust (part 3)
+Date: 2017-06-19
 Category: rust
 Tags: rust, foxy
-Summary: Model własności (ownership and borrowing), struktury, metody - szkielet echo serwera HTTP.
+Summary: Ownership and borrowing, structures, methods - writing an echo server.
 lang: en
-Status: draft
 
-Kod dostępny [tutaj](https://github.com/kele/foxy/tree/part3).
+Code available [here](https://github.com/kele/foxy/tree/part3).
 
-## Obsługa protokołu HTTP
-Rust ma w miarę dojrzałą bibliotekę do obsługi protokołu HTTP - jest nią
-[**hyper**](https://github.com/hyperium/hyper). Biblioteka ta jest używana m.in.
-przez [**Servo**](https://github.com/servo/servo), czyli prawdopodobnie
-najpoważniejszy projekt pisany w Ruscie w tej chwili.
+## HTTP protocol library
+There exists a pretty mature library for handling HTTP protocol for Rust already
+- [**hyper**](https://github.com/hyperium/hyper). Amongst the others it's used
+by [**Servo**](https://github.com/servo/servo) - probably the most prominent
+Rust project to date.
 
-Jednak w ramach nauki, napiszę swój własny, prosty moduł do obsługi HTTP.
+Nevertheless, I wouldn't learn much by just settling to use an external library,
+so I'm going to write my own HTTP protocol handling module.
 
-## Tworzenie nowego modułu
-W Ruscie kod organizowany jest w paczkach (**crate**), a wewnątrz nich w
-modułach. Paczki możemy porównać do bibliotek w innych językach. Każda paczka ma
-swój główny moduł (**root module**), a jego potomkami mogą być inne moduły.
+## Creating a new module
+Rust code is organized in **crates** which consist of **modules**. Crates
+correspond to libraries known from other languages and modules to packages. Each
+crate has it's **root module** which can have submodules as it's descendants.
 
-Aby użyć modułu, musimy go zadeklarować:
+To use a module we need to declare it first:
 
     ::rust
     mod http;
 
 <a name="backref-1"></a>
-Rust<sup>[1](#rust-i-cargo)</sup> wtedy będzie się spodziewać pliku `http.rs`
-lub `http/mod.rs`. Tam też musimy zdefiniować nasz kod.
+Rust<sup>[1](#rust-i-cargo)</sup> will then expect a `http.rs` or `http/mod.rs`
+source file. In one of these places we're going to write our code for HTTP
+handling.
 
     ::rust
     // http/mod.rs
@@ -36,25 +37,23 @@ lub `http/mod.rs`. Tam też musimy zdefiniować nasz kod.
 
     }
 
-Słowo kluczowe `struct` pozwala na zdefiniowanie nowej struktury, natomiast
-`pub` oznacza tutaj, że chcemy, aby była ona widoczna na zewnątrz tego modułu
-(odpowiednik `public` z C++ czy Javy).
+The `struct` keyword is used to define new structures and `pub` is used for
+making it externally visible (like `public` in C++ or Java).
 
+## Designing the API and the ownership model
+We already know where we want to put our code so it seems like a good time to
+start designing the API.
 
-## Projektowanie API i model własności
-Skoro już wiemy, gdzie chcemy umieścić kod do obsługi protokołu HTTP, to nadszedł
-czas na zaprojektowanie API.
+The main object will be `http::HttpStream` - a wrapper for `net::TcpStream` with
+a few HTTP specific functionalities added. It is also going to **own** the
+`TcpStream`. That being said, we need to talk a bit about the Rust ownership
+model.
 
-Chciałbym, żeby głównym obiektem był `http::HttpStream`. Będzie on opakowaniem
-dla `net::TcpStream` z dodatkiem specyficznych dla protokołu HTTP własności.
-Będzie on też właścicielem połączenia TCP przez resztę działania programu.
-Wydaje się, że to dobry moment na napisanie trochę o modelu własności Rusta.
+## Ownership and borrowing
+The ownership model is probably the most distinct feature of Rust amongst the
+popular modern programming languages.
 
-## Model własności (**ownership, borrowing**)
-Model własności jest prawdopodobnie najważniejszą cechą Rusta, wyróżniającą go
-na tle współczesnych języków programowania.
-
-W Ruscie, obiekt do funkcji możemy przekazać na trzy sposoby:
+In Rust, an object can be passed to a function in three different ways:
 
     ::rust
     let mut x = T{};
@@ -64,14 +63,14 @@ W Ruscie, obiekt do funkcji możemy przekazać na trzy sposoby:
     xyz(&mut x);
 
 ### `foo(x)`
-W przypadku `foo`, `x` przekazywany jest przez **wartość**. W Ruscie oznacza to
-jednak jedną z dwóch możliwości:
+In this case `x` is passed to `foo()` **by value**. In Rust it means one of two
+things:
 
-- `x` zostanie skopiowany (jeśli implementuje cechę `Copy`, o tym później), lub
-- `x` zostanie **oddany na własność**.
+- `x` is going to be copied (if it implements the `Copy` trait, more on that
+  later)
+- **the ownership of `x` is passed to `foo()`** (or, `x` is moved).
 
-W tym drugim przypadku, `x` nie będzie mógł być użyty po oddaniu go innej
-funkcji! Przykładowo:
+In the second case `x` cannot be used after the call to `foo()`!. For example: 
 
     ::rust
 	struct X { }
@@ -80,10 +79,10 @@ funkcji! Przykładowo:
 	fn main() {
 		let x = X{};
 		foo(x);
-		foo(x);
+		foo(x); // WRONG
 	}
 
-próba kompilacji powyższego kodu skończy się błędem:
+trying to compile the above code will result in an error:
 
 	error[E0382]: use of moved value: `x`
 	 --> <anon>:7:9
@@ -97,46 +96,43 @@ próba kompilacji powyższego kodu skończy się błędem:
 
 	error: aborting due to previous error
 
-`x` zostaje tutaj **oddany na własność** funkcji `foo()`, co oznacza, że
-tracimy do niego dostęp. Dzięki takiej semantyce, kompilator może zrobić dwie rzeczy:
+After `x` is moved to `foo()` we no longer have access to it. This semantics
+allows the compiler to do following things:
 
-- zabronić używania `x` po tym jak został oddany (jak oddasz komuś książkę, to
-przecież nie możesz jej nadal czytać),
-- poprawnie zdecydować, że to nie ta funkcja odpowiada za zwolnienie pamięci
-(tylko `foo`, a być może inna funkcja, której `foo` przekazuje `x`).
+- forbid using `x` after it was moved,
+- accurately decide which piece of code is responsible for freeing the memory
+  belonging to `x` (in this case, `foo` is).
 
-W taki własnie sposób, Rust zapewnia bezpieczeństwo przy jednoczesnym braku
-kosztu w trakcie wykonania programu (nie musimy zliczać referencji do `x`, ani
-zaprzęgać do pracy garbage collectora).
+This is how Rust can achieve memory safety with no runtime overhead (no
+reference counting, no garbage collecting).
 
 ### `bar(&x)`
-`&x` w Ruscie oznacza, że zmienną **pożyczamy** (**borrowing**). Po skończonej
-pracy, `bar()` musi oddać ją nam w nienaruszonym stanie. Tzn. przekazujemy `x`
-tylko __do odczytu__.
+`&x` in Rust indicates a **borrow**. After `bar()` finishes it's work it has to
+give `x` back in an untouched state. This means that `x` is lended to `bar()` in
+a **read only** way.
 
-Wtedy, bezpiecznie można wykonać kod taki jak:
+This allows us to safely write code such as:
 
 	::rust
 	bar(&x);
 	bar(&x);
 
-bo po każdym wywołaniu `bar(&x)`, `x` trafia z powrotem w nasze ręce.
-Kompilator wie wtedy, że:
+because after every `bar(&x)` call we're getting `x` back. The compiler then
+knows that:
 
-- `bar` nie musi się martwić o zwalnianie pamięci dla `x`,
-- `bar` nie może trzymać `x` w nieskończoność (więcej o tym, jak długo `bar`
-może korzystać z `x` opowiem przy okazji omawiania **lifetimes**).
+- `bar` doesn't have to free the memory of `x`,
+- `bar` cannot keep `x` forever (what does this actually mean is a more
+  complicated topic and we're going to cover it when discussing **lifetimes**).
 
 ### `xyz(&mut x)`
-Podobnie jak `&x`, lecz tym razem pozwalamy zmieniać pożyczony obiekt. Dopiero
-przy omawianiu **lifetimes** będzie można powiedzieć coś więcej o tym jak
-różnie `&` oraz `&mut` są traktowane przez kompilator. Proszę o cierpliwość ;).
+Similarly to `&x`, but this time we're lending the object with permission to
+change it. Without discussing **lifetimes** we cannot really talk more about the
+differences between `&` and `&mut`, please be patient. :)
 
-## Projektowanie API (ciąg dalszy)
-Skoro wiemy już co nieco o tym jak przekazuje się zmienne w Ruscie, możemy
-przejść do wymyślania, jak chcemy korzystać z naszego nowo utworzonego
-`http::HttpStream`. Na początek, napiszemy sobie zwykły __echo server__, tzn.
-będziemy odsyłać zapytania, które otrzymaliśmy.
+## Designing the API (continued)
+Knowing how Rust handles argument passing we can start thinking about using the
+new `HttpStream` object. At first, we're going to write an **echo server**,
+which means that we're going to send back whatever we've received.
 
 	::rust
 	// main.rs
@@ -148,12 +144,11 @@ będziemy odsyłać zapytania, które otrzymaliśmy.
 	fn handle_connection(tcp: net::TcpStream) {
 		let mut h = http::HttpStream::new(tcp);
 
-        // ... główna pętla znajdzie się tutaj ...
+        // ... main loop here ...
 	}
 
-Z pewnością potrzebujemy **oddać** połączenie TCP nowemu obiektowi `HttpStream`
-(nie chcemy, aby ktokolwiek inny mógł pisać do tego samego gniazda) i posłuży
-nam do tego funkcja `new`. W tej chwili, `HttpStream` będzie wyglądać tak:
+We are going to move the TCP socket to a new `HttpStream` object. The
+definition of `HttpStream` looks as follows:
 
 	::rust
     // http/mod.rs
@@ -170,16 +165,15 @@ nam do tego funkcja `new`. W tej chwili, `HttpStream` będzie wyglądać tak:
         }
     }
 
-`impl` służy do implementowania metod dla danej struktury. Jak widać, zamiast
-dodawać słowo kluczowe `pub` przed `impl`, robi się to na poziomie pojedynczych
-metod. W tym przypadku, `new` jest **associated function** (w innych językach
-nazwalibyśmy ją metodą statyczną (static method)), co oznacza, że nie potrzebuje
-przyjmować obiektu tego typu jako swojego argumentu (ale dalej ma dostęp do
-prywatnych pól). Stąd też wywołuje się ją jako `HttpStream::new()` zamiast
-`h.new()`.
+`impl` is used for implementing methods for a given structure. As one can see,
+`pub` is used on method granularity in Rust. In this case, `new` is an
+**associated function** (in other languages that would be called a static
+method), which means that it does not need to receive the object of the type
+it's associated with but it still has access to the private fields and methods
+of this type. This is why it's called as `HttpStream::new()` and not `h.new()`.
 
-Jedynym zadaniem `new` jest przekazanie `tcp` do `HttpStream`. Robimy to, bo nie
-chcemy, aby `tcp` było publicznym polem `HttpStream` (przynajmniej na razie).
+The only duty of `new` is to pass `tcp` to `HttpStream`, because we don't really
+want `tcp` to be a public field.
 
 	::rust
 	// main.rs
@@ -202,7 +196,7 @@ chcemy, aby `tcp` było publicznym polem `HttpStream` (przynajmniej na razie).
             // ...
 	}
 
-Pojawiły się dwie nowe metody: `is_closed()` oraz `get()`.
+There are two new methods here: `is_closed()` and `get()`.
 
     ::rust
     // http/mod.rs
@@ -225,22 +219,23 @@ Pojawiły się dwie nowe metody: `is_closed()` oraz `get()`.
         }
     }
 
-`get` będzie służyć do odbierania pakietów HTTP (`HttpPacket`), w związku z tym:
+<a name="backref-2"></a>
+`get` will be used for receiving HTTP packets, so it needs to:
 
-- musi mieć możliwość zmiany pola `tcp`, stąd `get` przyjmuje mutowalną
-  referencję (`&mut`) do obiektu typu `HttpStream` (`self`, podobnie jak w
-  Pythonie),
-- zwraca `io::Result<HttpPacket>`, bo tak [jak już
-  wspominałem](serwer-proxy-w-ruscie-czesc-2.html), coś może podczas
-  odczytywania pójść nie tak i chciałbym mieć możliwość obsługi błędu,
-- na razie implementacja ogranicza się do zwrócenia `Ok(HttpPacket {})`, czyli
-  pustego pakietu (gdybym chciał zwrócić błąd, użyłbym `Err` zamiast `Ok`).
+- have <span style="text-decoration:
+  line-through">mutable</span><sup>[2](#mutable-tcp)</sup>  access to the `tcp`
+  field through `self` (like in Python, or `this` in C++)
+- return `io::Result<HttpPacket>` because as [I mentioned
+  earlier](proxy-server-in-rust-part-2.html), something may go wrong while
+  receiving the packet and we would like to handle the error.
 
-`is_closed` natomiast, po prostu odpowiada na pytanie, czy połączenie zostało
-zamknięte.
+Right now the it's a dummy implementation so it just returns an empty packet
+(wrapper with `Ok`).
 
-Jak widać, potrzebna jest nam nowa struktura, `HttpPacket`, która będzie
-reprezentować pojedynczy pakiet HTTP.
+`is_closed()` is a predicate that tells us whether the connection is closed or
+not.
+
+We need a new `HttpPacket` structure representing an HTTP packet.
 
     ::rust
     // http/mod.rs
@@ -250,7 +245,7 @@ reprezentować pojedynczy pakiet HTTP.
     pub struct HttpPacket {}
 
 
-Pozostało teraz dopisać linijkę, odpowiadającą za odsyłanie odpowiedzi.
+One more thing to do in the main loop is to send back the packet.
 
     ::rust
     // main.rs
@@ -272,7 +267,7 @@ Pozostało teraz dopisać linijkę, odpowiadającą za odsyłanie odpowiedzi.
         }
     }
 
-Oraz odpowiednią (pustą, na razie) implementację `send`:
+And here's a dummy implementationof `send`:
 
     ::rust
     // http/mod.rs
@@ -287,25 +282,27 @@ Oraz odpowiednią (pustą, na razie) implementację `send`:
         }
     }
 
-`send` może zwrócić błąd, ale poza tym, nie zwraca niczego interesującego. W
-takim wypadku, przydaje się typ `()` (unit), podobny do `void` znanego z innych
-języków.
+Here, `send` might return an error but if everything goes smoothly there's
+nothing to return. In this case, the `()` (unit) type is used (which
+corresponds to `void` known from other languages).
 
-## Podsumowanie
-Jak widać, nie udało się napisać nam jeszcze niczego co jakkolwiek sensownie
-działa, ale przebrnęliśmy przez kilka kluczowych cech Rusta, bez których
-jakiekolwiek zrozumienie dowolnego kodu byłoby niemożliwe.
+## Summary
+We didn't manage to write any working code (at least it compiles!) but we've
+talked about some key features of Rust. Without discussing them it wouldn't be
+possible to understand any meaningful code.
 
-Mam nadzieję, ze w kolejnym poście uda mi się zaimplementować prosty serwer
-echo.
+In the next post I hope to implement a simple echo server.
 
-# Pozostałe części
-- [następny post (część 4)](serwer-proxy-w-ruscie-czesc-4.html)
-- [poprzedni post (część 2)](serwer-proxy-w-ruscie-czesc-2.html)
+# Other parts
+- [next post (part 4)](proxy-server-in-rust-part-4.html)
+- [previous post (part 2)](proxy-server-in-rust-2.html)
 
 <hr>
 
-### Przypisy
+### Footnotes
 
-<a name="rust-i-cargo"></a><sup>1</sup> W oficjalnej dokumentacji przez "Rust" rozumie się
-zarówno sam język jak i `cargo`. ([wróć do tekstu](#backref-1))
+<a name="rust-i-cargo"></a><sup>1</sup> In the official docs "Rust" is used as
+both the language itself and `cargo`.  ([go back](#backref-1))
+<a name="mutable-tcp"></a><sup>2</sup> This is a late translation of a post in
+Polish, so I already know that the `read()` method is also implemented for `&'a
+net::TcpStream` - no mutability needed here. ([go back](#backref-2))
