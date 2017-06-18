@@ -127,8 +127,8 @@
 
 
 <h3>Listening</h3>
-<p>We're going to use <strong>crate</strong>
-<a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>:</p>
+<p>We're going to use the <a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>
+<strong>crate</strong> (you can think of crates as libraries):</p>
 <div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 
@@ -148,16 +148,16 @@ with safety with minimal runtime overhead in mind. How is this achieved in this
 case? <code>bind()</code> could've simply returned <code>TcpListener</code>, but instead it returns
 <a href="https://doc.rust-lang.org/std/io/type.Result.html"><code>std::io::Result&lt;TcpListener&gt;</code></a>.</p>
 <p>What's the difference?</p>
-<p>Something can go wrong while trying to bind the socket (i.e. the port can be
+<p>Something may go wrong while trying to bind the socket (i.e. the port can be
 already in use). This can be handled in many different ways (all with different
-trade offs):</p>
+trade-offs):</p>
 <ul>
 <li>throwing an exception (Java, C++?),</li>
 <li>returning a pointer (C, C++),</li>
 <li>returning two values <code>(TcpListener, bool)</code> (Go),</li>
 <li><a href="http://en.cppreference.com/w/cpp/utility/optional"><code>std::optional</code></a> (C++17).</li>
 </ul>
-<p>Throwing an exception does not make the programmer handle it. Retruning a
+<p>Throwing an exception does not make the programmer handle it. Returning a
 pointer or a <code>bool</code> value does not help here either. <code>std::optional</code> can be
 simply ignored using <code>*</code>. Rust tries to follow a different path. Instead of the
 abovementioned solutions, an object is returned in a wrapping (<code>Result</code>). This
@@ -177,8 +177,8 @@ known from Go).</p>
 </pre></div>
 
 
-<p>If everything wen't smoothly, let's call <code>handle_connection(sock)</code>, which will
-take care of the rest.</p>
+<p>If everything went smoothly, call <code>handle_connection(sock)</code> which will care take
+of the rest.</p>
 <p>If not, <code>panic!</code> with an appropriate error message.</p>
 <h3>Pattern matching (<code>match</code>)</h3>
 <p><code>match</code> is a language construct used mostly in functional languages (like
@@ -188,7 +188,7 @@ that's why I'd like to say a few words about it.</p>
 for:</p>
 <ul>
 <li>checking whether the object is what we think it is (in the above code, whether
-  it's <code>Ok</code> (value) or <code>Err</code> (an error)</li>
+  it's <code>Ok</code> (a value) or <code>Err</code> (an error))</li>
 <li>dissecting it (<code>Ok</code> is here made of two parts, the first one is the TCP
   socket, the second is the address; I'm ignoring the adress (using <code>_</code>), but
   binding the <code>sock</code> variable to the socket).</li>
@@ -234,7 +234,7 @@ about one).</p>
 
 <p>As you can see, pattern matching is pretty convenient. In the languages that
 support it natively, the implementation is better than what I have shown here in
-C++. Unfortunately, I don't know enough about Rust to talk about it's internals
+C++. Unfortunately, I don't know enough about Rust to talk about its internals
 in this case.</p>
 <h3><code>panic!</code> and <code>{}</code></h3>
 <p><code>panic!</code> is a macro (right now we can think of it as a function, but <code>!</code> in Rust

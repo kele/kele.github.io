@@ -23,8 +23,8 @@
 
 
 &lt;h3&gt;Listening&lt;/h3&gt;
-&lt;p&gt;We're going to use &lt;strong&gt;crate&lt;/strong&gt;
-&lt;a href="https://doc.rust-lang.org/std/net/"&gt;&lt;code&gt;std::net&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;We're going to use the &lt;a href="https://doc.rust-lang.org/std/net/"&gt;&lt;code&gt;std::net&lt;/code&gt;&lt;/a&gt;
+&lt;strong&gt;crate&lt;/strong&gt; (you can think of crates as libraries):&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;net&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -44,16 +44,16 @@ with safety with minimal runtime overhead in mind. How is this achieved in this
 case? &lt;code&gt;bind()&lt;/code&gt; could've simply returned &lt;code&gt;TcpListener&lt;/code&gt;, but instead it returns
 &lt;a href="https://doc.rust-lang.org/std/io/type.Result.html"&gt;&lt;code&gt;std::io::Result&amp;lt;TcpListener&amp;gt;&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;What's the difference?&lt;/p&gt;
-&lt;p&gt;Something can go wrong while trying to bind the socket (i.e. the port can be
+&lt;p&gt;Something may go wrong while trying to bind the socket (i.e. the port can be
 already in use). This can be handled in many different ways (all with different
-trade offs):&lt;/p&gt;
+trade-offs):&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;throwing an exception (Java, C++?),&lt;/li&gt;
 &lt;li&gt;returning a pointer (C, C++),&lt;/li&gt;
 &lt;li&gt;returning two values &lt;code&gt;(TcpListener, bool)&lt;/code&gt; (Go),&lt;/li&gt;
 &lt;li&gt;&lt;a href="http://en.cppreference.com/w/cpp/utility/optional"&gt;&lt;code&gt;std::optional&lt;/code&gt;&lt;/a&gt; (C++17).&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Throwing an exception does not make the programmer handle it. Retruning a
+&lt;p&gt;Throwing an exception does not make the programmer handle it. Returning a
 pointer or a &lt;code&gt;bool&lt;/code&gt; value does not help here either. &lt;code&gt;std::optional&lt;/code&gt; can be
 simply ignored using &lt;code&gt;*&lt;/code&gt;. Rust tries to follow a different path. Instead of the
 abovementioned solutions, an object is returned in a wrapping (&lt;code&gt;Result&lt;/code&gt;). This
@@ -73,8 +73,8 @@ known from Go).&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;If everything wen't smoothly, let's call &lt;code&gt;handle_connection(sock)&lt;/code&gt;, which will
-take care of the rest.&lt;/p&gt;
+&lt;p&gt;If everything went smoothly, call &lt;code&gt;handle_connection(sock)&lt;/code&gt; which will care take
+of the rest.&lt;/p&gt;
 &lt;p&gt;If not, &lt;code&gt;panic!&lt;/code&gt; with an appropriate error message.&lt;/p&gt;
 &lt;h3&gt;Pattern matching (&lt;code&gt;match&lt;/code&gt;)&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;match&lt;/code&gt; is a language construct used mostly in functional languages (like
@@ -84,7 +84,7 @@ that's why I'd like to say a few words about it.&lt;/p&gt;
 for:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;checking whether the object is what we think it is (in the above code, whether
-  it's &lt;code&gt;Ok&lt;/code&gt; (value) or &lt;code&gt;Err&lt;/code&gt; (an error)&lt;/li&gt;
+  it's &lt;code&gt;Ok&lt;/code&gt; (a value) or &lt;code&gt;Err&lt;/code&gt; (an error))&lt;/li&gt;
 &lt;li&gt;dissecting it (&lt;code&gt;Ok&lt;/code&gt; is here made of two parts, the first one is the TCP
   socket, the second is the address; I'm ignoring the adress (using &lt;code&gt;_&lt;/code&gt;), but
   binding the &lt;code&gt;sock&lt;/code&gt; variable to the socket).&lt;/li&gt;
@@ -130,7 +130,7 @@ about one).&lt;/p&gt;
 
 &lt;p&gt;As you can see, pattern matching is pretty convenient. In the languages that
 support it natively, the implementation is better than what I have shown here in
-C++. Unfortunately, I don't know enough about Rust to talk about it's internals
+C++. Unfortunately, I don't know enough about Rust to talk about its internals
 in this case.&lt;/p&gt;
 &lt;h3&gt;&lt;code&gt;panic!&lt;/code&gt; and &lt;code&gt;{}&lt;/code&gt;&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;panic!&lt;/code&gt; is a macro (right now we can think of it as a function, but &lt;code&gt;!&lt;/code&gt; in Rust

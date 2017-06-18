@@ -9,7 +9,7 @@
         <meta name="author" content="">
 
 
-        <title>Serwer proxy w Ruscie (część 3)</title>
+        <title>Proxy server in Rust (part 3)</title>
 
             <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
             <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
@@ -48,11 +48,11 @@
 
 	<meta property="og:type" content="article">
 	<meta property="article:author" content="">
-	<meta property="og:url" content="../drafts/serwer-proxy-w-ruscie-czesc-3.html">
-	<meta property="og:title" content="Serwer proxy w Ruscie (część 3)">
+	<meta property="og:url" content="../drafts/proxy-server-in-rust-part-3.html">
+	<meta property="og:title" content="Proxy server in Rust (part 3)">
 	<meta property="og:description" content="">
 	<meta property="og:image" content="../">
-	<meta property="article:published_time" content="2017-06-04 00:00:00+02:00">
+	<meta property="article:published_time" content="2017-06-19 00:00:00+02:00">
 </head>
 
 <body>
@@ -88,8 +88,8 @@
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     <div class="post-heading">
-                        <h1>Serwer proxy w Ruscie (część 3)</h1>
-                        <span class="meta">nie 04 czerwiec 2017</span>
+                        <h1>Proxy server in Rust (part 3)</h1>
+                        <span class="meta">pon 19 czerwiec 2017</span>
                         
                     </div>
                 </div>
@@ -103,25 +103,27 @@
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
     <!-- Post Content -->
     <article>
-        <p>Kod dostępny <a href="https://github.com/kele/foxy/tree/part3">tutaj</a>.</p>
-<h2>Obsługa protokołu HTTP</h2>
-<p>Rust ma w miarę dojrzałą bibliotekę do obsługi protokołu HTTP - jest nią
-<a href="https://github.com/hyperium/hyper"><strong>hyper</strong></a>. Biblioteka ta jest używana m.in.
-przez <a href="https://github.com/servo/servo"><strong>Servo</strong></a>, czyli prawdopodobnie
-najpoważniejszy projekt pisany w Ruscie w tej chwili.</p>
-<p>Jednak w ramach nauki, napiszę swój własny, prosty moduł do obsługi HTTP.</p>
-<h2>Tworzenie nowego modułu</h2>
-<p>W Ruscie kod organizowany jest w paczkach (<strong>crate</strong>), a wewnątrz nich w
-modułach. Paczki możemy porównać do bibliotek w innych językach. Każda paczka ma
-swój główny moduł (<strong>root module</strong>), a jego potomkami mogą być inne moduły.</p>
-<p>Aby użyć modułu, musimy go zadeklarować:</p>
+        <p>Code available <a href="https://github.com/kele/foxy/tree/part3">here</a>.</p>
+<h2>HTTP protocol library</h2>
+<p>There exists a pretty mature library for handling HTTP protocol for Rust already
+- <a href="https://github.com/hyperium/hyper"><strong>hyper</strong></a>. Amongst the others it's used
+by <a href="https://github.com/servo/servo"><strong>Servo</strong></a> - probably the most prominent
+Rust project to date.</p>
+<p>Nevertheless, I wouldn't learn much by just settling to use an external library,
+so I'm going to write my own HTTP protocol handling module.</p>
+<h2>Creating a new module</h2>
+<p>Rust code is organized in <strong>crates</strong> which consist of <strong>modules</strong>. Crates
+correspond to libraries known from other languages and modules to packages. Each
+crate has it's <strong>root module</strong> which can have submodules as it's descendants.</p>
+<p>To use a module we need to declare it first:</p>
 <div class="highlight"><pre><span></span><span class="k">mod</span> <span class="nn">http</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 
 
 <p><a name="backref-1"></a>
-Rust<sup><a href="#rust-i-cargo">1</a></sup> wtedy będzie się spodziewać pliku <code>http.rs</code>
-lub <code>http/mod.rs</code>. Tam też musimy zdefiniować nasz kod.</p>
+Rust<sup><a href="#rust-i-cargo">1</a></sup> will then expect a <code>http.rs</code> or <code>http/mod.rs</code>
+source file. In one of these places we're going to write our code for HTTP
+handling.</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 <span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
@@ -129,20 +131,19 @@ lub <code>http/mod.rs</code>. Tam też musimy zdefiniować nasz kod.</p>
 </pre></div>
 
 
-<p>Słowo kluczowe <code>struct</code> pozwala na zdefiniowanie nowej struktury, natomiast
-<code>pub</code> oznacza tutaj, że chcemy, aby była ona widoczna na zewnątrz tego modułu
-(odpowiednik <code>public</code> z C++ czy Javy).</p>
-<h2>Projektowanie API i model własności</h2>
-<p>Skoro już wiemy, gdzie chcemy umieścić kod do obsługi protokołu HTTP, to nadszedł
-czas na zaprojektowanie API.</p>
-<p>Chciałbym, żeby głównym obiektem był <code>http::HttpStream</code>. Będzie on opakowaniem
-dla <code>net::TcpStream</code> z dodatkiem specyficznych dla protokołu HTTP własności.
-Będzie on też właścicielem połączenia TCP przez resztę działania programu.
-Wydaje się, że to dobry moment na napisanie trochę o modelu własności Rusta.</p>
-<h2>Model własności (<strong>ownership, borrowing</strong>)</h2>
-<p>Model własności jest prawdopodobnie najważniejszą cechą Rusta, wyróżniającą go
-na tle współczesnych języków programowania.</p>
-<p>W Ruscie, obiekt do funkcji możemy przekazać na trzy sposoby:</p>
+<p>The <code>struct</code> keyword is used to define new structures and <code>pub</code> is used for
+making it externally visible (like <code>public</code> in C++ or Java).</p>
+<h2>Designing the API and the ownership model</h2>
+<p>We already know where we want to put our code so it seems like a good time to
+start designing the API.</p>
+<p>The main object will be <code>http::HttpStream</code> - a wrapper for <code>net::TcpStream</code> with
+a few HTTP specific functionalities added. It is also going to <strong>own</strong> the
+<code>TcpStream</code>. That being said, we need to talk a bit about the Rust ownership
+model.</p>
+<h2>Ownership and borrowing</h2>
+<p>The ownership model is probably the most distinct feature of Rust amongst the
+popular modern programming languages.</p>
+<p>In Rust, an object can be passed to a function in three different ways:</p>
 <div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">T</span><span class="p">{};</span><span class="w"></span>
 
 <span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
@@ -152,26 +153,26 @@ na tle współczesnych języków programowania.</p>
 
 
 <h3><code>foo(x)</code></h3>
-<p>W przypadku <code>foo</code>, <code>x</code> przekazywany jest przez <strong>wartość</strong>. W Ruscie oznacza to
-jednak jedną z dwóch możliwości:</p>
+<p>In this case <code>x</code> is passed to <code>foo()</code> <strong>by value</strong>. In Rust it means one of two
+things:</p>
 <ul>
-<li><code>x</code> zostanie skopiowany (jeśli implementuje cechę <code>Copy</code>, o tym później), lub</li>
-<li><code>x</code> zostanie <strong>oddany na własność</strong>.</li>
+<li><code>x</code> is going to be copied (if it implements the <code>Copy</code> trait, more on that
+  later)</li>
+<li><strong>the ownership of <code>x</code> is passed to <code>foo()</code></strong> (or, <code>x</code> is moved).</li>
 </ul>
-<p>W tym drugim przypadku, <code>x</code> nie będzie mógł być użyty po oddaniu go innej
-funkcji! Przykładowo:</p>
+<p>In the second case <code>x</code> cannot be used after the call to <code>foo()</code>!. For example: </p>
 <div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">X</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
 <span class="k">fn</span> <span class="nf">foo</span><span class="p">(</span><span class="n">x</span><span class="w"> </span>:<span class="nc">X</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
 
 <span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">X</span><span class="p">{};</span><span class="w"></span>
 <span class="w">    </span><span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">// WRONG</span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
 
-<p>próba kompilacji powyższego kodu skończy się błędem:</p>
+<p>trying to compile the above code will result in an error:</p>
 <div class="highlight"><pre><span></span>error[E0382]: use of moved value: `x`
  --&gt; &lt;anon&gt;:7:9
   |
@@ -186,43 +187,40 @@ error: aborting due to previous error
 </pre></div>
 
 
-<p><code>x</code> zostaje tutaj <strong>oddany na własność</strong> funkcji <code>foo()</code>, co oznacza, że
-tracimy do niego dostęp. Dzięki takiej semantyce, kompilator może zrobić dwie rzeczy:</p>
+<p>After <code>x</code> is moved to <code>foo()</code> we no longer have access to it. This semantics
+allows the compiler to do following things:</p>
 <ul>
-<li>zabronić używania <code>x</code> po tym jak został oddany (jak oddasz komuś książkę, to
-przecież nie możesz jej nadal czytać),</li>
-<li>poprawnie zdecydować, że to nie ta funkcja odpowiada za zwolnienie pamięci
-(tylko <code>foo</code>, a być może inna funkcja, której <code>foo</code> przekazuje <code>x</code>).</li>
+<li>forbid using <code>x</code> after it was moved,</li>
+<li>accurately decide which piece of code is responsible for freeing the memory
+  belonging to <code>x</code> (in this case, <code>foo</code> is).</li>
 </ul>
-<p>W taki własnie sposób, Rust zapewnia bezpieczeństwo przy jednoczesnym braku
-kosztu w trakcie wykonania programu (nie musimy zliczać referencji do <code>x</code>, ani
-zaprzęgać do pracy garbage collectora).</p>
+<p>This is how Rust can achieve memory safety with no runtime overhead (no
+reference counting, no garbage collecting).</p>
 <h3><code>bar(&amp;x)</code></h3>
-<p><code>&amp;x</code> w Ruscie oznacza, że zmienną <strong>pożyczamy</strong> (<strong>borrowing</strong>). Po skończonej
-pracy, <code>bar()</code> musi oddać ją nam w nienaruszonym stanie. Tzn. przekazujemy <code>x</code>
-tylko <strong>do odczytu</strong>.</p>
-<p>Wtedy, bezpiecznie można wykonać kod taki jak:</p>
+<p><code>&amp;x</code> in Rust indicates a <strong>borrow</strong>. After <code>bar()</code> finishes it's work it has to
+give <code>x</code> back in an untouched state. This means that <code>x</code> is lended to <code>bar()</code> in
+a <strong>read only</strong> way.</p>
+<p>This allows us to safely write code such as:</p>
 <div class="highlight"><pre><span></span><span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
 <span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 
-<p>bo po każdym wywołaniu <code>bar(&amp;x)</code>, <code>x</code> trafia z powrotem w nasze ręce.
-Kompilator wie wtedy, że:</p>
+<p>because after every <code>bar(&amp;x)</code> call we're getting <code>x</code> back. The compiler then
+knows that:</p>
 <ul>
-<li><code>bar</code> nie musi się martwić o zwalnianie pamięci dla <code>x</code>,</li>
-<li><code>bar</code> nie może trzymać <code>x</code> w nieskończoność (więcej o tym, jak długo <code>bar</code>
-może korzystać z <code>x</code> opowiem przy okazji omawiania <strong>lifetimes</strong>).</li>
+<li><code>bar</code> doesn't have to free the memory of <code>x</code>,</li>
+<li><code>bar</code> cannot keep <code>x</code> forever (what does this actually mean is a more
+  complicated topic and we're going to cover it when discussing <strong>lifetimes</strong>).</li>
 </ul>
 <h3><code>xyz(&amp;mut x)</code></h3>
-<p>Podobnie jak <code>&amp;x</code>, lecz tym razem pozwalamy zmieniać pożyczony obiekt. Dopiero
-przy omawianiu <strong>lifetimes</strong> będzie można powiedzieć coś więcej o tym jak
-różnie <code>&amp;</code> oraz <code>&amp;mut</code> są traktowane przez kompilator. Proszę o cierpliwość ;).</p>
-<h2>Projektowanie API (ciąg dalszy)</h2>
-<p>Skoro wiemy już co nieco o tym jak przekazuje się zmienne w Ruscie, możemy
-przejść do wymyślania, jak chcemy korzystać z naszego nowo utworzonego
-<code>http::HttpStream</code>. Na początek, napiszemy sobie zwykły <strong>echo server</strong>, tzn.
-będziemy odsyłać zapytania, które otrzymaliśmy.</p>
+<p>Similarly to <code>&amp;x</code>, but this time we're lending the object with permission to
+change it. Without discussing <strong>lifetimes</strong> we cannot really talk more about the
+differences between <code>&amp;</code> and <code>&amp;mut</code>, please be patient. :)</p>
+<h2>Designing the API (continued)</h2>
+<p>Knowing how Rust handles argument passing we can start thinking about using the
+new <code>HttpStream</code> object. At first, we're going to write an <strong>echo server</strong>,
+which means that we're going to send back whatever we've received.</p>
 <div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
 
 <span class="c1">// ...</span>
@@ -232,14 +230,13 @@ będziemy odsyłać zapytania, które otrzymaliśmy.</p>
 <span class="k">fn</span> <span class="nf">handle_connection</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span>::<span class="n">HttpStream</span>::<span class="n">new</span><span class="p">(</span><span class="n">tcp</span><span class="p">);</span><span class="w"></span>
 
-<span class="w">    </span><span class="c1">// ... główna pętla znajdzie się tutaj ...</span>
+<span class="w">    </span><span class="c1">// ... main loop here ...</span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
 
-<p>Z pewnością potrzebujemy <strong>oddać</strong> połączenie TCP nowemu obiektowi <code>HttpStream</code>
-(nie chcemy, aby ktokolwiek inny mógł pisać do tego samego gniazda) i posłuży
-nam do tego funkcja <code>new</code>. W tej chwili, <code>HttpStream</code> będzie wyglądać tak:</p>
+<p>We are going to move the TCP socket to a new <code>HttpStream</code> object. The
+definition of <code>HttpStream</code> looks as follows:</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 
 <span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">net</span><span class="p">;</span><span class="w"></span>
@@ -256,7 +253,11 @@ nam do tego funkcja <code>new</code>. W tej chwili, <code>HttpStream</code> będ
 </pre></div>
 
 
-<p><code>impl</code> służy do implementowania metod dla danej struktury. Jak widać, zamiast
+<p><code>impl</code> is used for implementing methods for a given structure. As one can see,
+<code>pub</code> is used on method granularity in Rust. In this case, <code>new</code> is an
+<strong>associated function</strong> (in other languages that would be called a static
+method), which means that it does not need to receive 
+<code>impl</code> służy do implementowania metod dla danej struktury. Jak widać, zamiast
 dodawać słowo kluczowe <code>pub</code> przed <code>impl</code>, robi się to na poziomie pojedynczych
 metod. W tym przypadku, <code>new</code> jest <strong>associated function</strong> (w innych językach
 nazwalibyśmy ją metodą statyczną (static method)), co oznacza, że nie potrzebuje
