@@ -30,8 +30,8 @@ This is how a draft of the main source file looks like (explanations below):
     }
 
 ### Listening
-We're going to use __crate__
-[`std::net`](https://doc.rust-lang.org/std/net/):
+We're going to use the [`std::net`](https://doc.rust-lang.org/std/net/)
+__crate__ (you can think of crates as libraries):
 
     ::rust
     use std::net;
@@ -55,16 +55,16 @@ case? `bind()` could've simply returned `TcpListener`, but instead it returns
 
 What's the difference?
 
-Something can go wrong while trying to bind the socket (i.e. the port can be
+Something may go wrong while trying to bind the socket (i.e. the port can be
 already in use). This can be handled in many different ways (all with different
-trade offs):
+trade-offs):
 
 - throwing an exception (Java, C++?),
 - returning a pointer (C, C++),
 - returning two values `(TcpListener, bool)` (Go),
 - [`std::optional`](http://en.cppreference.com/w/cpp/utility/optional) (C++17).
 
-Throwing an exception does not make the programmer handle it. Retruning a
+Throwing an exception does not make the programmer handle it. Returning a
 pointer or a `bool` value does not help here either. `std::optional` can be
 simply ignored using `*`. Rust tries to follow a different path. Instead of the
 abovementioned solutions, an object is returned in a wrapping (`Result`). This
@@ -86,8 +86,8 @@ known from Go).
         Err(e) => panic!("Error while accepting connection: {}", e),
     }
 
-If everything wen't smoothly, let's call `handle_connection(sock)`, which will
-take care of the rest.
+If everything went smoothly, call `handle_connection(sock)` which will care take
+of the rest.
 
 If not, `panic!` with an appropriate error message.
 
@@ -100,7 +100,7 @@ that's why I'd like to say a few words about it.
 for:
 
 - checking whether the object is what we think it is (in the above code, whether
-  it's `Ok` (value) or `Err` (an error)
+  it's `Ok` (a value) or `Err` (an error))
 - dissecting it (`Ok` is here made of two parts, the first one is the TCP
   socket, the second is the address; I'm ignoring the adress (using `_`), but
   binding the `sock` variable to the socket).
@@ -148,7 +148,7 @@ We could've simulated it in C++ in a following way:
 
 As you can see, pattern matching is pretty convenient. In the languages that
 support it natively, the implementation is better than what I have shown here in
-C++. Unfortunately, I don't know enough about Rust to talk about it's internals
+C++. Unfortunately, I don't know enough about Rust to talk about its internals
 in this case.
 
 ### `panic!` and `{}`
