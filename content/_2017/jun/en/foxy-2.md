@@ -1,14 +1,13 @@
-Title: Serwer proxy w Ruscie (część 2)
-Date: 2017-06-03
+Title: Proxy server in Rust (part 2)
+Date: 2017-06-18
 Category: rust
 Tags: rust, foxy
-Summary: Początkowy szkielet programu.
+Summary: First draft and the basics of Rust.
 lang: en
-Status: draft
 
 
-## Posłuchajmy czegoś po TCP
-Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):
+## Let's listen over TCP
+This is how a draft of the main source file looks like (explanations below): 
 
     ::rust
     // main.rs
@@ -30,99 +29,102 @@ Tak wygląda szkielet naszego programu (wyjaśnienia poniżej):
         println!("Opened connection: {:?}", tcp)
     }
 
-### Nasłuchiwanie
-Używać będziemy paczki (__crate__)
-[`std::net`](https://doc.rust-lang.org/std/net/). Robimy to za pomocą:
+### Listening
+We're going to use __crate__
+[`std::net`](https://doc.rust-lang.org/std/net/):
 
     ::rust
     use std::net;
 
-Użyjemy funkcji
-[`std::net::TcpListener::bind`](https://doc.rust-lang.org/std/net/struct.TcpListener.html),
-żeby zacząć nasłuchiwać na porcie 4000 lokalnej maszyny:
+[`std::net::TcpListener::bind`](https://doc.rust-lang.org/std/net/struct.TcpListener.html)
+function is used here to start listening on port 4000 of the localhost.
 
     ::rust
     const PROXY_PORT: u16 = 4000;
     let listener = net::TcpListener::bind(("127.0.0.1", PROXY_PORT)).unwrap();
 
-`u16` to odpowiednik `uint16`, zatem `const PROXY_PORT: u16 = 4000;` jest po
-prostu deklaracją stałej `PROXY_PORT` typu liczba naturalnia 16-bitowa o
-wartości 4000.
 
-Czym jest tajemnicze `unwrap()` na końcu? Rust jest językiem nastawionym przede
-wszystkim na bezpieczeństwo, wymuszane już w czasie kompilacji. Na czym to
-dokładnie polega w tym przypadku? `bind()` mógłby zwyczajnie zwrócić
-`TcpListener`, jednak zamiast tego zwraca
+`u16` corresponds to `uint16` known from other languages, so `const PROXY_PORT:
+u16 = 4000;` is a definition of a `PROXY_PORT` constant 16-bit integer equal to
+4000.
+
+What about the mysterious `unwrap()` at the end? Rust is a language designed
+with safety with minimal runtime overhead in mind. How is this achieved in this
+case? `bind()` could've simply returned `TcpListener`, but instead it returns
 [`std::io::Result<TcpListener>`](https://doc.rust-lang.org/std/io/type.Result.html).
 
-Co to za różnica?
+What's the difference?
 
-Coś po drodze może pójść nie tak (np. port może być już zajęty). Można radzić sobie z tym na różne sposoby:
+Something can go wrong while trying to bind the socket (i.e. the port can be
+already in use). This can be handled in many different ways (all with different
+trade offs):
 
-- rzucając wyjątek (Java, C++?),
-- zwracając wskaźnik (C, C++),
-- zwracając dwie wartości `(TcpListener, bool)` (Go),
+- throwing an exception (Java, C++?),
+- returning a pointer (C, C++),
+- returning two values `(TcpListener, bool)` (Go),
 - [`std::optional`](http://en.cppreference.com/w/cpp/utility/optional) (C++17).
 
-Rzucenie wyjątku nie wymusza na programiście obsłużenia go. Zwracanie wskaźnika
-czy wartości typu `bool` również. `std::optional` wystarczy ominąć prostym `*`.
-Rust idzie jednak inną drogą. Zamiast powyższych rozwiązań, zwracane jest
-opakowanie (`Result`), które może zawierać oczekiwaną przez nas
-wartość `TcpListener` lub błąd (`Error`)!
+Throwing an exception does not make the programmer handle it. Retruning a
+pointer or a `bool` value does not help here either. `std::optional` can be
+simply ignored using `*`. Rust tries to follow a different path. Instead of the
+abovementioned solutions, an object is returned in a wrapping (`Result`). This
+type can be one of the two: the expected value of type `TcpListener` or an error
+(`Error`)!
 
-W związku z tym, że rozpoczęcie
-nasłuchiwania na jakimś porcie jest kluczowe dla działania programu, jedyne co
-robię, to rozpakowuję wynik (`unwrap()`).
+Since binding a socket to a port is vital for this program to run, the only
+thing I do here is `unwrap()` the result.
 
-Cóż robi ta tajemnicza metoda? Jeśli nie było błędu - zwraca wartość. Jeśli
-pojawił się błąd, wykonuje się
-[`panic!`](https://doc.rust-lang.org/std/macro.panic.html) (odpowiednik
-[`panic`](https://blog.golang.org/defer-panic-and-recover) z Go).
+What does this method do? If there is no error - the value is returned. If an
+error happened, [`panic!`](https://doc.rust-lang.org/std/macro.panic.html) is
+called (similar to [`panic`](https://blog.golang.org/defer-panic-and-recover)
+known from Go).
 
-### Akceptowanie połączenia
+### Accepting a connection
     ::rust
     match listener.accept() {
         Ok((sock, _)) => handle_connection(sock),
         Err(e) => panic!("Error while accepting connection: {}", e),
     }
 
-Jeśli udało się poprawnie zaakceptować połączenie, wywołajmy
-`handle_connection(sock)`, które zajmie się dalszą obsługą połączenia.
+If everything wen't smoothly, let's call `handle_connection(sock)`, which will
+take care of the rest.
 
-Jeśli nie - `panic!` z odpowiednim komunikatem o błędzie.
+If not, `panic!` with an appropriate error message.
 
 ### Pattern matching (`match`)
-`match` jest konstrukcją, która jest spotykana raczej w językach funkcyjnych
-(OCaml, Haskell, Lisp) niż w imperatywnych (C, Python, Java, C++), dlatego
-chciałbym poświęcić jej parę zdań.
+`match` is a language construct used mostly in functional languages (like
+OCaml, Haskell, Lisp) rather than imperative ones (C, Python, Java, C++) and
+that's why I'd like to say a few words about it.
 
-[**Pattern matching**](https://en.wikipedia.org/wiki/Pattern_matching), bo tak
-nazywa się ta konstrukcja, służy do:
+[**Pattern matching**](https://en.wikipedia.org/wiki/Pattern_matching) is used
+for:
 
-- sprawdzania, czy obiekt jest taki jak nam się wydaje (w powyższym przypadku,
-  czy to jest `Ok` (prawidłowa wartość) czy `Err` (błąd)),
-- rozłożenia go na mniejsze porcje (`Ok` w powyższym przykładzie składa się z
-  dwóch cześci, pierwszą jest socket, drugą adres, adres ignoruję (poprzez `_`),
-  ale socket zapamiętuję jako `sock`),
+- checking whether the object is what we think it is (in the above code, whether
+  it's `Ok` (value) or `Err` (an error)
+- dissecting it (`Ok` is here made of two parts, the first one is the TCP
+  socket, the second is the address; I'm ignoring the adress (using `_`), but
+  binding the `sock` variable to the socket).
 
-Przykładowo, gdbyśmy pisali kalkulator oparty na drzewach wyrażen
-arytmetycznych, pewna częśc kodu mogłaby wyglądać tak:
+
+For example, if we were to write a simple calculator based on trees of
+arithmetic expressions, a part of code might have looked like this:
 
     ::rust
     match expression {
-        Add(x, y) -> x + y,
-        Sub(x, y) -> x - y,
-        Mul(x, y) -> x * y,
-        Div(x, y) -> x / y,
+        Add(x, y) => x + y,
+        Sub(x, y) => x - y,
+        Mul(x, y) => x * y,
+        Div(x, y) => x / y,
     }
 
-Taka konstrukcja w językach programowania jest możliwa dzięki istnieniu
-specjalnych typów, które są alternatywą różnych wartości. Tzn. wyrażenie
-arytmetyczne może być dodawaniem, odejmowaniem, mnożeniem lub dzieleniem.
-Informacja o tym, czym właściwie jest dane wyrażenie, jest zapisywana i
-sprawdzana w czasie wykonania programu. To co jest ważne, to fakt, że kompilator
-wie, jakie są wszystkie możliwe alternatywy (i może nas ostrzec, gdy o którejś
-zapomnimy!). W C++ możnaby to symulować w taki sposób:
+This language construct is possible thanks to types that are an disjunction of
+different possible values. In this case it means that the expression can be i.e.
+an addition or substraction. The information about the kind of expression is
+stored and retrieved at runtime. What's important is the fact that the compiler
+can check whether we've covered all the possible kinds (and warn us if we forget
+about one).
+
+We could've simulated it in C++ in a following way:
 
     ::cpp
     enum Type { Add, Sub, Mul, Div };
@@ -144,32 +146,32 @@ zapomnimy!). W C++ możnaby to symulować w taki sposób:
         case Type::Div: return expr.add.x / expr.add.y; break;
     }
 
-Jak widać, pattern matching jest dość wygodny. W językach, które go wspierają,
-implementacja jest na ogół wydajniejsza niż to co pokazałem powyżej w C++.
-Niestety, za mało jeszcze wiem o Ruscie, żeby wiedzieć jak wyglądają jego
-wewnętrzne mechanizmy w tym wypadku.
+As you can see, pattern matching is pretty convenient. In the languages that
+support it natively, the implementation is better than what I have shown here in
+C++. Unfortunately, I don't know enough about Rust to talk about it's internals
+in this case.
 
-### `panic!` oraz `{}`
-`panic!` jest makrem (na razie możemy traktować to jako funkcję, lecz `!` jest w
-Ruscie sygnałem, że w istocie jest to makro), które używane jest w przypadku
-krytycznych dla działania programu błędów.
+### `panic!` and `{}`
+`panic!` is a macro (right now we can think of it as a function, but `!` in Rust
+is an indicator of a macro call) used for critical program errors.
 
-`panic!` przyjmuje argumenty podobne do `printf` znanego z wielu innych języków,
-tyle tylko, że `{}` pozwala na wyświetlenie wartości dowolnego (no, nie do
-końca, ale o tym kiedy indziej) typu.
+`panic!` receives an argument list similar to `printf` known from other
+programming languages, and `{}` is used to print the values of any type (not
+exactly, more on that later).
 
-## Co dalej?
-W kolejnych postach planuję omówić:
 
-- obsługę zapytań w różnych wątkach,
-- semantykę własności i pożyczania (ownership and borrowing) (jest to główna
-  cecha wyróżniająca Rust na tle innych popularnych języków programowania),
-- tworzenie włąsnych struktur,
-- metody,
-- implementacje cech (trait),
-- wyrażenia i rozkazy (expressions and statements),
-- i wiele innych.
+## What's coming up?
+In the next posts I plan to talk about:
 
-# Pozostałe części
-- [następny post (część 3)](serwer-proxy-w-ruscie-czesc-3.html)
-- [poprzedni post (część 1)](serwer-proxy-w-ruscie-czesc-1.html)
+- handling HTTP requests in different threads
+- ownership and borrowing (the main characteristic of Rust that differentiates
+  it from popular modern programming languages)
+- creating structures
+- methods
+- traits
+- expressions and statements
+- and many, many more.
+
+# Other parts
+- [next post (part 3)](proxy-server-in-rust-part-3.html)
+- [previous post (part 1)](proxy-server-in-rust-part-1.html)
