@@ -1,5 +1,288 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/en/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/en/</id><updated>2017-06-18T00:00:00+02:00</updated><entry><title>Proxy server in Rust (part 2)</title><link href="http://kele.github.io/en/proxy-server-in-rust-part-2.html" rel="alternate"></link><published>2017-06-18T00:00:00+02:00</published><updated>2017-06-18T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-18:/en/proxy-server-in-rust-part-2.html</id><summary type="html">&lt;p&gt;First draft and the basics of Rust.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Let's listen over TCP&lt;/h2&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - rust</title><link href="http://kele.github.io/en/" rel="alternate"></link><link href="http://kele.github.io/feeds/rust.atom.xml" rel="self"></link><id>http://kele.github.io/en/</id><updated>2017-06-19T00:00:00+02:00</updated><entry><title>Proxy server in Rust (part 3)</title><link href="http://kele.github.io/en/proxy-server-in-rust-part-3.html" rel="alternate"></link><published>2017-06-19T00:00:00+02:00</published><updated>2017-06-19T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-19:/en/proxy-server-in-rust-part-3.html</id><summary type="html">&lt;p&gt;Ownership and borrowing, structures, methods - writing an echo server.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Code available &lt;a href="https://github.com/kele/foxy/tree/part3"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;HTTP protocol library&lt;/h2&gt;
+&lt;p&gt;There exists a pretty mature library for handling HTTP protocol for Rust already
+- &lt;a href="https://github.com/hyperium/hyper"&gt;&lt;strong&gt;hyper&lt;/strong&gt;&lt;/a&gt;. Amongst the others it's used
+by &lt;a href="https://github.com/servo/servo"&gt;&lt;strong&gt;Servo&lt;/strong&gt;&lt;/a&gt; - probably the most prominent
+Rust project to date.&lt;/p&gt;
+&lt;p&gt;Nevertheless, I wouldn't learn much by just settling to use an external library,
+so I'm going to write my own HTTP protocol handling module.&lt;/p&gt;
+&lt;h2&gt;Creating a new module&lt;/h2&gt;
+&lt;p&gt;Rust code is organized in &lt;strong&gt;crates&lt;/strong&gt; which consist of &lt;strong&gt;modules&lt;/strong&gt;. Crates
+correspond to libraries known from other languages and modules to packages. Each
+crate has it's &lt;strong&gt;root module&lt;/strong&gt; which can have submodules as it's descendants.&lt;/p&gt;
+&lt;p&gt;To use a module we need to declare it first:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a name="backref-1"&gt;&lt;/a&gt;
+Rust&lt;sup&gt;&lt;a href="#rust-i-cargo"&gt;1&lt;/a&gt;&lt;/sup&gt; will then expect a &lt;code&gt;http.rs&lt;/code&gt; or &lt;code&gt;http/mod.rs&lt;/code&gt;
+source file. In one of these places we're going to write our code for HTTP
+handling.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The &lt;code&gt;struct&lt;/code&gt; keyword is used to define new structures and &lt;code&gt;pub&lt;/code&gt; is used for
+making it externally visible (like &lt;code&gt;public&lt;/code&gt; in C++ or Java).&lt;/p&gt;
+&lt;h2&gt;Designing the API and the ownership model&lt;/h2&gt;
+&lt;p&gt;We already know where we want to put our code so it seems like a good time to
+start designing the API.&lt;/p&gt;
+&lt;p&gt;The main object will be &lt;code&gt;http::HttpStream&lt;/code&gt; - a wrapper for &lt;code&gt;net::TcpStream&lt;/code&gt; with
+a few HTTP specific functionalities added. It is also going to &lt;strong&gt;own&lt;/strong&gt; the
+&lt;code&gt;TcpStream&lt;/code&gt;. That being said, we need to talk a bit about the Rust ownership
+model.&lt;/p&gt;
+&lt;h2&gt;Ownership and borrowing&lt;/h2&gt;
+&lt;p&gt;The ownership model is probably the most distinct feature of Rust amongst the
+popular modern programming languages.&lt;/p&gt;
+&lt;p&gt;In Rust, an object can be passed to a function in three different ways:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;{};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;xyz&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;&lt;code&gt;foo(x)&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;In this case &lt;code&gt;x&lt;/code&gt; is passed to &lt;code&gt;foo()&lt;/code&gt; &lt;strong&gt;by value&lt;/strong&gt;. In Rust it means one of two
+things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;x&lt;/code&gt; is going to be copied (if it implements the &lt;code&gt;Copy&lt;/code&gt; trait, more on that
+  later)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;the ownership of &lt;code&gt;x&lt;/code&gt; is passed to &lt;code&gt;foo()&lt;/code&gt;&lt;/strong&gt; (or, &lt;code&gt;x&lt;/code&gt; is moved).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In the second case &lt;code&gt;x&lt;/code&gt; cannot be used after the call to &lt;code&gt;foo()&lt;/code&gt;!. For example: &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;X&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;:&lt;span class="nc"&gt;X&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;X&lt;/span&gt;&lt;span class="p"&gt;{};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// WRONG&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;trying to compile the above code will result in an error:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;error[E0382]: use of moved value: `x`
+ --&amp;gt; &amp;lt;anon&amp;gt;:7:9
+  |
+  |     foo(x);
+  |         - value moved here
+  |     foo(x);
+  |         ^ value used here after move
+  |
+  = note: move occurs because `x` has type `X`, which does not implement the `Copy` trait
+
+error: aborting due to previous error
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After &lt;code&gt;x&lt;/code&gt; is moved to &lt;code&gt;foo()&lt;/code&gt; we no longer have access to it. This semantics
+allows the compiler to do following things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;forbid using &lt;code&gt;x&lt;/code&gt; after it was moved,&lt;/li&gt;
+&lt;li&gt;accurately decide which piece of code is responsible for freeing the memory
+  belonging to &lt;code&gt;x&lt;/code&gt; (in this case, &lt;code&gt;foo&lt;/code&gt; is).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is how Rust can achieve memory safety with no runtime overhead (no
+reference counting, no garbage collecting).&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;bar(&amp;amp;x)&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;&amp;amp;x&lt;/code&gt; in Rust indicates a &lt;strong&gt;borrow&lt;/strong&gt;. After &lt;code&gt;bar()&lt;/code&gt; finishes it's work it has to
+give &lt;code&gt;x&lt;/code&gt; back in an untouched state. This means that &lt;code&gt;x&lt;/code&gt; is lended to &lt;code&gt;bar()&lt;/code&gt; in
+a &lt;strong&gt;read only&lt;/strong&gt; way.&lt;/p&gt;
+&lt;p&gt;This allows us to safely write code such as:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;because after every &lt;code&gt;bar(&amp;amp;x)&lt;/code&gt; call we're getting &lt;code&gt;x&lt;/code&gt; back. The compiler then
+knows that:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;bar&lt;/code&gt; doesn't have to free the memory of &lt;code&gt;x&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bar&lt;/code&gt; cannot keep &lt;code&gt;x&lt;/code&gt; forever (what does this actually mean is a more
+  complicated topic and we're going to cover it when discussing &lt;strong&gt;lifetimes&lt;/strong&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;code&gt;xyz(&amp;amp;mut x)&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Similarly to &lt;code&gt;&amp;amp;x&lt;/code&gt;, but this time we're lending the object with permission to
+change it. Without discussing &lt;strong&gt;lifetimes&lt;/strong&gt; we cannot really talk more about the
+differences between &lt;code&gt;&amp;amp;&lt;/code&gt; and &lt;code&gt;&amp;amp;mut&lt;/code&gt;, please be patient. :)&lt;/p&gt;
+&lt;h2&gt;Designing the API (continued)&lt;/h2&gt;
+&lt;p&gt;Knowing how Rust handles argument passing we can start thinking about using the
+new &lt;code&gt;HttpStream&lt;/code&gt; object. At first, we're going to write an &lt;strong&gt;echo server&lt;/strong&gt;,
+which means that we're going to send back whatever we've received.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// ... main loop here ...&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We are going to move the TCP socket to a new &lt;code&gt;HttpStream&lt;/code&gt; object. The
+definition of &lt;code&gt;HttpStream&lt;/code&gt; looks as follows:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;net&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;tcp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;impl&lt;/code&gt; is used for implementing methods for a given structure. As one can see,
+&lt;code&gt;pub&lt;/code&gt; is used on method granularity in Rust. In this case, &lt;code&gt;new&lt;/code&gt; is an
+&lt;strong&gt;associated function&lt;/strong&gt; (in other languages that would be called a static
+method), which means that it does not need to receive the object of the type
+it's associated with but it still has access to the private fields and methods
+of this type. This is why it's called as &lt;code&gt;HttpStream::new()&lt;/code&gt; and not &lt;code&gt;h.new()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The only duty of &lt;code&gt;new&lt;/code&gt; is to pass &lt;code&gt;tcp&lt;/code&gt; to &lt;code&gt;HttpStream&lt;/code&gt;, because we don't really
+want &lt;code&gt;tcp&lt;/code&gt; to be a public field.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;mod&lt;/span&gt; &lt;span class="nn"&gt;http&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while getting http request: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;There are two new methods here: &lt;code&gt;is_closed()&lt;/code&gt; and &lt;code&gt;get()&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;::&lt;span class="n"&gt;io&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;io&lt;/span&gt;::&lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;HttpPacket&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// TODO&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HttpPacket&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="c1"&gt;// TODO&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a name="backref-2"&gt;&lt;/a&gt;
+&lt;code&gt;get&lt;/code&gt; will be used for receiving HTTP packets, so it needs to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;have &lt;span style="text-decoration:
+  line-through"&gt;mutable&lt;/span&gt;&lt;sup&gt;&lt;a href="#mutable-tcp"&gt;2&lt;/a&gt;&lt;/sup&gt;  access to the &lt;code&gt;tcp&lt;/code&gt;
+  field through &lt;code&gt;self&lt;/code&gt; (like in Python, or &lt;code&gt;this&lt;/code&gt; in C++)&lt;/li&gt;
+&lt;li&gt;return &lt;code&gt;io::Result&amp;lt;HttpPacket&amp;gt;&lt;/code&gt; because as &lt;a href="proxy-server-in-rust-part-2.html"&gt;I mentioned
+  earlier&lt;/a&gt;, something may go wrong while
+  receiving the packet and we would like to handle the error.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Right now the it's a dummy implementation so it just returns an empty packet
+(wrapper with &lt;code&gt;Ok&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;is_closed()&lt;/code&gt; is a predicate that tells us whether the connection is closed or
+not.&lt;/p&gt;
+&lt;p&gt;We need a new &lt;code&gt;HttpPacket&lt;/code&gt; structure representing an HTTP packet.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;HttpPacket&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;One more thing to do in the main loop is to send back the packet.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;handle_connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;: &lt;span class="nc"&gt;net&lt;/span&gt;::&lt;span class="n"&gt;TcpStream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpStream&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;tcp&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;is_closed&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;Err&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error while getting http request: {}&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;http&lt;/span&gt;::&lt;span class="n"&gt;HttpPacket&lt;/span&gt;&lt;span class="p"&gt;{});&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And here's a dummy implementationof &lt;code&gt;send&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// http/mod.rs&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;HttpStream&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;packet&lt;/span&gt;: &lt;span class="kp"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nc"&gt;HttpPacket&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;io&lt;/span&gt;::&lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(())&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here, &lt;code&gt;send&lt;/code&gt; might return an error but if everything goes smoothly there's
+nothing to return. In this case, the &lt;code&gt;()&lt;/code&gt; (unit) type is used (which
+corresponds to &lt;code&gt;void&lt;/code&gt; known from other languages).&lt;/p&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;We didn't manage to write any working code (at least it compiles!) but we've
+talked about some key features of Rust. Without discussing them it wouldn't be
+possible to understand any meaningful code.&lt;/p&gt;
+&lt;p&gt;In the next post I hope to implement a simple echo server.&lt;/p&gt;
+&lt;h1&gt;Other parts&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="proxy-server-in-rust-part-4.html"&gt;next post (part 4)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="proxy-server-in-rust-2.html"&gt;previous post (part 2)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+
+&lt;h3&gt;Footnotes&lt;/h3&gt;
+&lt;p&gt;&lt;a name="rust-i-cargo"&gt;&lt;/a&gt;&lt;sup&gt;1&lt;/sup&gt; In the official docs "Rust" is used as
+both the language itself and &lt;code&gt;cargo&lt;/code&gt;.  (&lt;a href="#backref-1"&gt;go back&lt;/a&gt;)
+&lt;a name="mutable-tcp"&gt;&lt;/a&gt;&lt;sup&gt;2&lt;/sup&gt; This is a late translation of a post in
+Polish, so I already know that the &lt;code&gt;read()&lt;/code&gt; method is also implemented for &lt;code&gt;&amp;amp;'a
+net::TcpStream&lt;/code&gt; - no mutability needed here. (&lt;a href="#backref-2"&gt;go back&lt;/a&gt;)&lt;/p&gt;</content><category term="rust"></category><category term="foxy"></category></entry><entry><title>Proxy server in Rust (part 2)</title><link href="http://kele.github.io/en/proxy-server-in-rust-part-2.html" rel="alternate"></link><published>2017-06-18T00:00:00+02:00</published><updated>2017-06-18T00:00:00+02:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2017-06-18:/en/proxy-server-in-rust-part-2.html</id><summary type="html">&lt;p&gt;First draft and the basics of Rust.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Let's listen over TCP&lt;/h2&gt;
 &lt;p&gt;This is how a draft of the main source file looks like (explanations below): &lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// main.rs&lt;/span&gt;
 

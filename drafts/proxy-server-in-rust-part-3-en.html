@@ -256,16 +256,11 @@ definition of <code>HttpStream</code> looks as follows:</p>
 <p><code>impl</code> is used for implementing methods for a given structure. As one can see,
 <code>pub</code> is used on method granularity in Rust. In this case, <code>new</code> is an
 <strong>associated function</strong> (in other languages that would be called a static
-method), which means that it does not need to receive 
-<code>impl</code> służy do implementowania metod dla danej struktury. Jak widać, zamiast
-dodawać słowo kluczowe <code>pub</code> przed <code>impl</code>, robi się to na poziomie pojedynczych
-metod. W tym przypadku, <code>new</code> jest <strong>associated function</strong> (w innych językach
-nazwalibyśmy ją metodą statyczną (static method)), co oznacza, że nie potrzebuje
-przyjmować obiektu tego typu jako swojego argumentu (ale dalej ma dostęp do
-prywatnych pól). Stąd też wywołuje się ją jako <code>HttpStream::new()</code> zamiast
-<code>h.new()</code>.</p>
-<p>Jedynym zadaniem <code>new</code> jest przekazanie <code>tcp</code> do <code>HttpStream</code>. Robimy to, bo nie
-chcemy, aby <code>tcp</code> było publicznym polem <code>HttpStream</code> (przynajmniej na razie).</p>
+method), which means that it does not need to receive the object of the type
+it's associated with but it still has access to the private fields and methods
+of this type. This is why it's called as <code>HttpStream::new()</code> and not <code>h.new()</code>.</p>
+<p>The only duty of <code>new</code> is to pass <code>tcp</code> to <code>HttpStream</code>, because we don't really
+want <code>tcp</code> to be a public field.</p>
 <div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
 
 <span class="c1">// ...</span>
@@ -288,7 +283,7 @@ chcemy, aby <code>tcp</code> było publicznym polem <code>HttpStream</code> (prz
 </pre></div>
 
 
-<p>Pojawiły się dwie nowe metody: <code>is_closed()</code> oraz <code>get()</code>.</p>
+<p>There are two new methods here: <code>is_closed()</code> and <code>get()</code>.</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 
 <span class="c1">// ...</span>
@@ -311,21 +306,21 @@ chcemy, aby <code>tcp</code> było publicznym polem <code>HttpStream</code> (prz
 </pre></div>
 
 
-<p><code>get</code> będzie służyć do odbierania pakietów HTTP (<code>HttpPacket</code>), w związku z tym:</p>
+<p><a name="backref-2"></a>
+<code>get</code> will be used for receiving HTTP packets, so it needs to:</p>
 <ul>
-<li>musi mieć możliwość zmiany pola <code>tcp</code>, stąd <code>get</code> przyjmuje mutowalną
-  referencję (<code>&amp;mut</code>) do obiektu typu <code>HttpStream</code> (<code>self</code>, podobnie jak w
-  Pythonie),</li>
-<li>zwraca <code>io::Result&lt;HttpPacket&gt;</code>, bo tak <a href="serwer-proxy-w-ruscie-czesc-2.html">jak już
-  wspominałem</a>, coś może podczas
-  odczytywania pójść nie tak i chciałbym mieć możliwość obsługi błędu,</li>
-<li>na razie implementacja ogranicza się do zwrócenia <code>Ok(HttpPacket {})</code>, czyli
-  pustego pakietu (gdybym chciał zwrócić błąd, użyłbym <code>Err</code> zamiast <code>Ok</code>).</li>
+<li>have <span style="text-decoration:
+  line-through">mutable</span><sup><a href="#mutable-tcp">2</a></sup>  access to the <code>tcp</code>
+  field through <code>self</code> (like in Python, or <code>this</code> in C++)</li>
+<li>return <code>io::Result&lt;HttpPacket&gt;</code> because as <a href="proxy-server-in-rust-part-2.html">I mentioned
+  earlier</a>, something may go wrong while
+  receiving the packet and we would like to handle the error.</li>
 </ul>
-<p><code>is_closed</code> natomiast, po prostu odpowiada na pytanie, czy połączenie zostało
-zamknięte.</p>
-<p>Jak widać, potrzebna jest nam nowa struktura, <code>HttpPacket</code>, która będzie
-reprezentować pojedynczy pakiet HTTP.</p>
+<p>Right now the it's a dummy implementation so it just returns an empty packet
+(wrapper with <code>Ok</code>).</p>
+<p><code>is_closed()</code> is a predicate that tells us whether the connection is closed or
+not.</p>
+<p>We need a new <code>HttpPacket</code> structure representing an HTTP packet.</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 
 <span class="c1">// ...</span>
@@ -334,7 +329,7 @@ reprezentować pojedynczy pakiet HTTP.</p>
 </pre></div>
 
 
-<p>Pozostało teraz dopisać linijkę, odpowiadającą za odsyłanie odpowiedzi.</p>
+<p>One more thing to do in the main loop is to send back the packet.</p>
 <div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
 
 <span class="c1">// ...</span>
@@ -356,7 +351,7 @@ reprezentować pojedynczy pakiet HTTP.</p>
 </pre></div>
 
 
-<p>Oraz odpowiednią (pustą, na razie) implementację <code>send</code>:</p>
+<p>And here's a dummy implementationof <code>send</code>:</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 
 <span class="c1">// ...</span>
@@ -371,25 +366,27 @@ reprezentować pojedynczy pakiet HTTP.</p>
 </pre></div>
 
 
-<p><code>send</code> może zwrócić błąd, ale poza tym, nie zwraca niczego interesującego. W
-takim wypadku, przydaje się typ <code>()</code> (unit), podobny do <code>void</code> znanego z innych
-języków.</p>
-<h2>Podsumowanie</h2>
-<p>Jak widać, nie udało się napisać nam jeszcze niczego co jakkolwiek sensownie
-działa, ale przebrnęliśmy przez kilka kluczowych cech Rusta, bez których
-jakiekolwiek zrozumienie dowolnego kodu byłoby niemożliwe.</p>
-<p>Mam nadzieję, ze w kolejnym poście uda mi się zaimplementować prosty serwer
-echo.</p>
-<h1>Pozostałe części</h1>
+<p>Here, <code>send</code> might return an error but if everything goes smoothly there's
+nothing to return. In this case, the <code>()</code> (unit) type is used (which
+corresponds to <code>void</code> known from other languages).</p>
+<h2>Summary</h2>
+<p>We didn't manage to write any working code (at least it compiles!) but we've
+talked about some key features of Rust. Without discussing them it wouldn't be
+possible to understand any meaningful code.</p>
+<p>In the next post I hope to implement a simple echo server.</p>
+<h1>Other parts</h1>
 <ul>
-<li><a href="serwer-proxy-w-ruscie-czesc-4.html">następny post (część 4)</a></li>
-<li><a href="serwer-proxy-w-ruscie-czesc-2.html">poprzedni post (część 2)</a></li>
+<li><a href="proxy-server-in-rust-part-4.html">next post (part 4)</a></li>
+<li><a href="proxy-server-in-rust-2.html">previous post (part 2)</a></li>
 </ul>
 <hr>
 
-<h3>Przypisy</h3>
-<p><a name="rust-i-cargo"></a><sup>1</sup> W oficjalnej dokumentacji przez "Rust" rozumie się
-zarówno sam język jak i <code>cargo</code>. (<a href="#backref-1">wróć do tekstu</a>)</p>
+<h3>Footnotes</h3>
+<p><a name="rust-i-cargo"></a><sup>1</sup> In the official docs "Rust" is used as
+both the language itself and <code>cargo</code>.  (<a href="#backref-1">go back</a>)
+<a name="mutable-tcp"></a><sup>2</sup> This is a late translation of a post in
+Polish, so I already know that the <code>read()</code> method is also implemented for <code>&amp;'a
+net::TcpStream</code> - no mutability needed here. (<a href="#backref-2">go back</a>)</p>
     </article>
 
             </div>
