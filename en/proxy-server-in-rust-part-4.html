@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 
 <head>
             <meta charset="utf-8">
@@ -9,19 +9,19 @@
         <meta name="author" content="">
 
 
-        <title>Serwer proxy w Ruscie (część 4)</title>
+        <title>Proxy server in Rust (part 4)</title>
 
             <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
             <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
 
         <!-- Bootstrap Core CSS -->
-        <link href="../theme/css/bootstrap.css" rel="stylesheet">
+        <link href="./../theme/css/bootstrap.css" rel="stylesheet">
 
         <!-- Custom CSS -->
-        <link href="../theme/css/clean-blog.css" rel="stylesheet">
+        <link href="./../theme/css/clean-blog.css" rel="stylesheet">
 
         <!-- Code highlight color scheme -->
-            <link href="../theme/css/code_blocks/darkly.css" rel="stylesheet">
+            <link href="./../theme/css/code_blocks/darkly.css" rel="stylesheet">
 
 
         <!-- Custom Fonts -->
@@ -48,11 +48,11 @@
 
 	<meta property="og:type" content="article">
 	<meta property="article:author" content="">
-	<meta property="og:url" content="../drafts/serwer-proxy-w-ruscie-czesc-4-en.html">
-	<meta property="og:title" content="Serwer proxy w Ruscie (część 4)">
+	<meta property="og:url" content="./proxy-server-in-rust-part-4.html">
+	<meta property="og:title" content="Proxy server in Rust (part 4)">
 	<meta property="og:description" content="">
-	<meta property="og:image" content="../">
-	<meta property="article:published_time" content="2017-06-05 00:00:00+02:00">
+	<meta property="og:image" content="./">
+	<meta property="article:published_time" content="2017-06-20 00:00:00+02:00">
 </head>
 
 <body>
@@ -68,7 +68,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="../">kele.github.io</a>
+                <a class="navbar-brand" href="./">kele.github.io</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -83,13 +83,13 @@
     </nav>
 
     <!-- Page Header -->
-        <header class="intro-header" style="background-image: url('../theme/images/header.jpg')">
+        <header class="intro-header" style="background-image: url('./../theme/images/header.jpg')">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     <div class="post-heading">
-                        <h1>Serwer proxy w Ruscie (część 4)</h1>
-                        <span class="meta">pon 05 czerwiec 2017</span>
+                        <h1>Proxy server in Rust (part 4)</h1>
+                        <span class="meta">wto 20 czerwiec 2017</span>
                         
                     </div>
                 </div>
@@ -103,19 +103,18 @@
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
     <!-- Post Content -->
     <article>
-        <p>Kod dostępny <a href="https://github.com/kele/foxy/tree/part4">tutaj</a>.</p>
-<h2>Projektowanie API - ciąg dalszy</h2>
-<h3>Stara definicja <code>HttpPacket</code></h3>
-<p>W poprzednim poście naszkicowaliśmy API <code>HttpStream</code>, tak, że zawiera m.in.
-metody <code>get</code> oraz <code>send</code>, które przyjmują bądź zwracają <code>HttpPacket</code>.</p>
+        <p>Code available <a href="https://github.com/kele/foxy/tree/part4">here</a>.</p>
+<h2>API design - continued</h2>
+<h3>Old definition of <code>HttpPacket</code></h3>
+<p>In the previous post we've drafted the <code>HttpStream</code> interface. It had <code>get</code> and
+<code>send</code> methods receiving a <code>HttpPacket</code>.</p>
 <div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">HttpPacket</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
 </pre></div>
 
 
-<p>Tak wyglądała nasza robocza definicja <code>HttpPacket</code>. Ktokolwiek jednak miał do
-czynienia z protokołem HTTP, wie jednak, że mozemy podzielić pakiety na
-zapytania (request) i odpowiedzi (response).</p>
-<h4>Przykładowe zapytanie</h4>
+<p>If you know anything about HTTP you probably know that the packets can be
+classified as requests or responses.</p>
+<h4>Example request</h4>
 <div class="highlight"><pre><span></span><span class="nf">GET</span> <span class="nn">/hello.htm</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
 <span class="na">User-Agent</span><span class="o">:</span> <span class="l">Mozilla/4.0 (compatible; MSIE5.01; Windows NT)</span>
 <span class="na">Host</span><span class="o">:</span> <span class="l">www.tutorialspoint.com</span>
@@ -125,7 +124,7 @@ zapytania (request) i odpowiedzi (response).</p>
 </pre></div>
 
 
-<h4>Przykładowa odpowiedź</h4>
+<h4>Example response</h4>
 <div class="highlight"><pre><span></span><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 <span class="na">Date</span><span class="o">:</span> <span class="l">Mon, 27 Jul 2009 12:28:53 GMT</span>
 <span class="na">Server</span><span class="o">:</span> <span class="l">Apache/2.2.14 (Win32)</span>
@@ -143,11 +142,12 @@ zapytania (request) i odpowiedzi (response).</p>
 
 
 <h3><code>get</code> -&gt; <code>get_request</code></h3>
-<p>W związku z powyższym, przemianujemy <code>get</code> na <code>get_request</code>.</p>
-<h3><code>HttpRequest</code> oraz <code>HttpResponse</code> zamiast <code>HttpPacket</code></h3>
-<p>Na razie będziemy po prostu trzymać w nich jedynie <code>string::String</code>. Z czasem
-będziemy dodawać do tych stuktur m.in. informacje o kodzie odpowiedzi, rodzaju
-zapytania, wersji protokołu HTTP, URI i wiele innych rzeczy.</p>
+<p>We're going to use separate receiving methods for requests and responses because
+their structure is different and they are parsed in a different way.</p>
+<h3><code>HttpRequest</code> and <code>HttpResponse</code> instead of <code>HttpPacket</code></h3>
+<p>For now we're just going to store the content of the packets in
+<code>string::String</code>. Gradually we're going to make the information more and more
+structured (storing the status code, request method, URI, etc. separately).</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 <span class="c1">// ...</span>
 
@@ -161,23 +161,22 @@ zapytania, wersji protokołu HTTP, URI i wiele innych rzeczy.</p>
 </pre></div>
 
 
-<h3>Implementacja <code>get_request</code></h3>
-<p>Nagłówek pakietu HTTP zawsze kończy się dwoma znakami nowej linii, więc
-chcielibyśmy mieć możliwość czytania z naszego gniazda bajt po bajcie, aż
-napotkamy <code>"\n\n"</code>. Możemy do tego celu wykorzystać <code>std::io::Bytes</code>, który jest
-iteratorem po pojedynczych bajtach dla typów mających cechę (trait)
-<code>std::io::Read</code>.</p>
-<p>Jak możemy przeczytać w dokumentacji, dla <code>std::net::TcpStream</code> zaimplementowano
-cechę <code>Read</code>. Problem w tym, że gdybyśmy chcieli czytać z <code>TcpStream</code> bajt po
-bajcie, musielibyśmy w kółko wywoływać metodę <code>read()</code>, która to najzwyczajniej
-w świecie wykonywałaby wywołanie systemowe z prośbą o jeden bajt. Byłoby to
-strasznie wolne. Na szczęście, nawet dokumentacja Rusta wspomina o tym problemie
-i daje gotowe rozwiązanie: <code>std::io::BufReader</code>. Typ ten opakowuje coś co
-spełnia <code>std::io::Read</code> i czyta z tego do wewnętrznego bufora, minimalizując w
-ten sposób liczbę wywołań systemowych. My możemy wtedy, bez utraty wydajności,
-czytać z <code>BufReader</code> bajt po bajcie.</p>
-<p>Jak wspomniałem, <code>Bytes</code> jest iteratorem, więc aby wziąc z niego kolejny
-element, korzystamy z metody <code>next()</code>.</p>
+<h3><code>get_request</code> implementation</h3>
+<p>The HTTP header ends with <span style="text-decoration: line-through">two
+newlines</span> (actually, this is not true, see the next post in the series),
+so we'd probably like to read the data from the socket byte per byte until we
+encounter the ending sequence. We can use the <code>std::io::Bytes</code> type for that. It
+is just an iterator over bytes for objects that implement the <code>std::io::Read</code>
+trait.</p>
+<p><code>std::net::TcpStream</code> satisfies the <code>Read</code> trait, but if we wanted to read from
+it one byte at a time, each <code>read()</code> invocation would result in a system call,
+degrading the performance significantly. Luckily even the Rust standard library
+documentation mentions this problem and offers an elegant solution in the form
+of <code>std::io::BufReader</code>. This type wraps a given <code>Read</code> object and buffers the
+I/O operations minimizing the number of system calls. We can make use of it to
+read from the socket one byte a time without degrading the performance.</p>
+<p>As I already mentioned, <code>Bytes</code> is an iterator so to take the next element we're
+using the <code>next()</code> method:</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 <span class="c1">// ...</span>
 
@@ -191,24 +190,22 @@ element, korzystamy z metody <code>next()</code>.</p>
 </pre></div>
 
 
-<p><code>as char</code>, jak się można domyślić, służy po prostu do rzutowania na typ <code>char</code>
-(podstawowy typ do reprezentacji znaku w Ruscie), w tym wypadku z <code>u8</code> (bajt).
-Do czego służą <code>unwrap()</code>? Metoda ta jest zdefiniowana m.in. dla typów <code>Result</code>
-oraz <code>Option</code>. <code>Result</code> może przechowywać <code>Ok</code> (wartość) lub <code>Err</code> (błąd),
-natomiast <code>Option</code> może przechowayć <code>Some</code> (wartość) lub <code>None</code> (nic).
-<code>unwrap()</code> dla obu tych typów ma takie same działanie, tzn.:</p>
+<p>To cast the value from byte (<code>u8</code>) to <code>char</code> we're using the <code>as</code> keyword. What
+the <code>unwrap()</code> is for? This method is implemented for <code>Result</code> and <code>Option</code>
+types, amongst the others. A <code>Result</code> object can hold an <code>Ok</code> value or an <code>Err</code>
+error. <code>Option</code> can be one of <code>Some</code> (value) or <code>None</code> (nothing). The <code>unwrap()</code>
+method for both these types provides more or less the same functionality:</p>
 <ul>
-<li>jeśli obiekt reprezentuje wartość (<code>Ok</code> lub <code>Some</code>), zwróc ją (bez
-  opakowania),</li>
-<li>jeśli jednak nie jest to poprawna wartość (czyli <code>Err</code> lub <code>None</code>),
-  wykonaj <code>panic!</code> (na ogół rownoważne z zakończeniem działania programu).</li>
+<li>if the object represents a value (<code>Ok</code> or <code>Some</code>) - return it</li>
+<li>if it's not a value (<code>Err</code> or <code>None</code>), execute <code>panic!</code> (which is equivalent
+  with terminating the program at this point)</li>
 </ul>
-<p>W przypadku iteratora <code>Bytes</code>, <code>next()</code> zwraca <code>Option&lt;Result&lt;u8&gt;&gt;</code>. Jeśli nie
-ma już więcej danych, zwrócone zostanie <code>None</code>, jeśli jednak otrzymaliśmy z
-powrotem coś od wywołanego pod spodem <code>read()</code>, otrzymamy <code>Some(x)</code>, gdzie <code>x</code>
-będzie odczytanym bajtem (<code>Ok(b)</code>) lub błędem (<code>Err(e)</code>). Stąd potrzebne są nam
-dwa <code>unwrap()</code>'.</p>
-<p>Pełna implementacja <code>get_request</code>:</p>
+<p>For this instance of the <code>Bytes</code> iterator, <code>next()</code> returns
+<code>Option&lt;Result&lt;u8&gt;&gt;</code>. If there is no more data, <code>None</code> is returned. Otherwise,
+<code>Some(x)</code> is returned where <code>x</code> is whatever the result of <code>read()</code> was (<code>Ok(b)</code>
+with a single byte inside or <code>Err(e)</code> with an error). That's why we need two
+<code>unwrap()</code> calls (one for <code>Option</code>, one for <code>Result</code>).</p>
+<p>The full <code>get_request</code> implementation:</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 <span class="c1">// ...</span>
 
@@ -231,36 +228,38 @@ dwa <code>unwrap()</code>'.</p>
 </pre></div>
 
 
-<p>Na razie, w przypadku jakiegokolwiek błędu, będziemy poprostu kończyć pracę
-programu (poprzez <code>unwrap()</code>).</p>
-<h3>Dzielenie obiektów</h3>
-<p>W <code>get_request</code> korzystaliśmy z <code>self.tcp_bytes</code>. Wcześniej, <code>HttpStream</code>
-składał się z <code>tcp</code> typu <code>net::TcpStream</code>. Teraz, będziemy mieć tam nowe pole,
-typu <code>io::Bytes&lt;io::BufReader&lt;net::TcpStream&gt;&gt;</code> (iterator po bajtach odczytanych
-z <code>TcpStream</code> z buforowaniem). Problem w tym, że taki typ bierze sobie
-<code>TcpStream</code> na własność. A my, oprócz odbierania danych, chcielibyśmy także coś
-wysyłać!</p>
+<p>Right now in case of any error we're just going to terminate the program (what
+<code>unwrap()</code> does).</p>
+<p>The <code>get_request</code> method is using <code>self.tcp_bytes</code>. Previously <code>HttpStream</code>
+consisted of only one field <code>tcp</code> of type <code>net::TcpStream</code>. Now, we're going to
+have a new field of type <code>io::Bytes&lt;io::BufReader&lt;net::TcpStream&gt;&gt;</code> (iterator
+over bytes read from <code>TcpStream</code> with buffering). Unfortunately, the <code>BufReader</code>
+takes ownership of the <code>TcpStream</code> but it doesn't provide any methods to write
+to the stream! We definitely don't want that. This is a good moment to talk
+about sharing.</p>
+<h3>Sharing</h3>
 <p><a name="backref-1"></a>
-W językach z garbage collectorem dzielenie obiektów jest całkiem łatwe. W
-językach typu C++, możemy skorzystać z dobrodziejstw typu <code>std::shared_ptr</code> lub
-referencji. Jakie problemy niosą za sobą te rozwiązania?</p>
+Sharing in languages with garbage collecting is pretty easy, because the
+programmer doesn't have to worry about memory management. In languages like C++
+one can use references or smart pointers (i.e. <code>std::shared_ptr</code>). All these
+solutions have some drawbacks:</p>
 <ul>
-<li>garbage collector wiąże się ze spadkiem wydajności i marnymi gwarancjami co do
-  tego, kiedy zasoby zostaną zwolnione,</li>
-<li><code>std::shared_ptr</code> to zliczanie referencji, które też wiąże się z pewnym
-  narzutem wpływającym na wydajność (poza tym, obiekt
-  musi<sup><a href="#shared-ptr">1</a></sup> być zaalokowany na stercie),</li>
-<li>referencje nie są bezpieczne (<a href="https://en.wikipedia.org/wiki/Dangling_pointer"><strong>dangling reference</strong></a>).</li>
+<li>garbage collecting causes degraded performance <strong>and</strong> really poor guarantees
+  about the time when the resources will be freed</li>
+<li><code>std::shared_ptr</code> and similar types are based on reference counting which also
+  comes with some runtime overhead (also, whatever is wrapped in <code>shared_ptr</code>
+  has to be allocated on the heap<sup><a href="#shared-ptr">1</a></sup>),</li>
+<li>references <strong>are not safe</strong> (<a href="https://en.wikipedia.org/wiki/Dangling_pointer">dangling
+  reference problem</a>).</li>
 </ul>
-<p>Rust jest nastawiony bardzo mocno na bezpieczeństwo (memory safety) oraz
-wydajność. Oczywiście moglibyśmy zwyczajnie skorzystać ze zliczania referencji
-<code>alloc::rc::Rc</code>, ale nie zyskalibyśmy wtedy zbyt wiele w stosunku do
-<code>std::shared_ptr</code> znanego z C++.</p>
+<p>Rust is designed with performance and memory safety in mind. We could use the
+<code>alloc::rc::Rc</code> type if we wanted to rely on reference counting, but we wouldn't
+gain much here over C++.</p>
 <p><a name="backref-2"></a>
-Skorzystamy więc z referencji. Jak mieć w języku referencje, a jednocześnie nie
-pozwolić na możliwość zaistnienia wspomnianego wyżej problemu <strong>dangling
-reference</strong><sup><a href="#dangling-tlumaczenie">2</a></sup>?</p>
-<p>Możemy powiedzieć kompilatorowi, jak długo obiekty będą żyć!</p>
+We are going to references instead. References in Rust are different than what
+we know from C++, though. To use them, the Rust compiler needs to know how long
+the objects they point to are going to live and if it sees something shady, a
+compiler error is produced.</p>
 <h3>Lifetimes</h3>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 <span class="c1">// ...</span>
@@ -283,30 +282,27 @@ reference</strong><sup><a href="#dangling-tlumaczenie">2</a></sup>?</p>
 </pre></div>
 
 
-<p>W Ruscie kiedykolwiek zobaczymy nazwę zaczynającą się od <code>'</code>, jak np <code>'a</code> lub
-<code>'static</code>, będzie to oznaczenie lifetime'u. W przypadku powyższego kodu, mówimy
-kompilatorowi, że:</p>
+<p>Whenever we see a name starting with <code>'</code> in Rust, like <code>'a</code> or <code>'static</code>, this
+means we're dealing with a <strong>lifetime</strong>. In the code above we're telling the
+compiler that:</p>
 <ul>
-<li><code>HttpStream</code>, jako jeden z parametrów, przyjmuje lifetime (wewnątrz definicji
-  <code>HttpStream</code> nazwiemy go <code>'a</code>),</li>
-<li><code>tcp</code> jest referencją na obiekt <code>net::TcpStream</code> o lifetime <code>'a</code>,</li>
-<li><code>tcp_bytes</code> jest iteratorem <code>Bytes</code> po buforowanym <code>Reader</code>, <code>Reader</code> ten jest
-  referencją na obiekt typu <code>net::TcpStream</code> o lifetime <code>'a</code>.</li>
+<li>one of the parameters of <code>HttpStream</code> is a lifetime (let's call it <code>'a</code>
+  internally)</li>
+<li><code>tcp</code> is a reference for a <code>net::TcpStream</code> object that has lifetime <code>'a</code></li>
+<li><code>tcp_bytes</code> is a <code>Bytes</code> iterator over buffered <code>Reader</code>, the <code>Reader</code> itself
+  is a reference to <code>net::TcpStream</code> object with lifetime <code>'a</code></li>
 </ul>
-<p>Co zyskujemy dzięki temu, że dodaliśmy kilka <code>'a</code> tu i ówdzie? Kompilator wie,
-że <code>tcp_bytes</code> będzie trzymać referencje na <code>net::TcpStream</code> tak długo jak robi
-to struktura <code>HttpStream</code>, której jest częścią. Dzięku temu, <code>Bytes</code> oraz
-<code>BufReader</code>, które składają się na <code>tcp_bytes</code>, <strong>zawsze będą wskazywać na żywy
-obiekt</strong> <code>net::TcpStream</code>. Za kilka dodatkowych znaków ustrzegliśmy się przed
-problemem dangling reference <strong>w czasie kompilacji!</strong> Bezpieczeństwo przy
-zerowym koszcie wykonania, tego oczekiwaliśmy od Rusta.</p>
-<p>Tak naprawdę to kiedykolwiek w Ruscie korzystamy z referencji, korzystamy także
-z lifetimes. Tyle tylko, że często kompilator potrafi sam się domyślić, skąd
-wziąc informację o tym jak długo obiekt będzie żył. Technika ta nazywa się
-<strong>lifetime elision</strong>.</p>
+<p>What did we gain by adding a few <code>'a</code> here and there? The compiler knows that
+both fields refer to objects with the same lifetime and it can check when using
+<code>HttpStream</code> that they live longer than the structure itself. Therefore it is
+guaranteed that <code>tcp</code> nor <code>tcp_bytes</code> will ever contain a <strong>dangling
+reference</strong>. Memory safety at compile time - that's what we expect from Rust.</p>
+<p>In reality, whenever we're using references we're also using lifetimes.
+Fortunately, due to <strong>lifetime elision</strong> we don't need to specify the lifetimes
+manually every time because in some cases the compiler can figure them out by
+itself.</p>
 <h3><code>send()</code></h3>
-<p>Implementacja <code>send()</code>, która ma po prostu wysłać jakieś dane (bez układania ich
-w prawdziwy pakiet HTTP) jest trywialna:</p>
+<p>Implementing <code>send()</code> without structuring the data is trivial:</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 <span class="c1">// ...</span>
 
@@ -318,11 +314,10 @@ w prawdziwy pakiet HTTP) jest trywialna:</p>
 </pre></div>
 
 
-<h3>Zmiany w głównej pętli</h3>
-<p>Zmieniliśmy <code>HttpPacket</code> na <code>HttpResponse</code> i
-<code>HttpRequest</code>. Oprócz tego, <code>HttpStream</code> przyjmuje teraz <code>net::TcpStream</code> przez
-referencję (a nie na własność). W związku z tym nowa główna pętla wygląda teraz
-tak:</p>
+<h3>Changes in the main loop</h3>
+<p>We've replaced the <code>HttpPacket</code> with <code>HttpResponse</code> and <code>HttpRequest</code>. Also, the
+<code>HttpStream</code> now receives the <code>TcpStream</code> by reference (the ownership is not
+passed). Therefore, the main loop needs to look like this:</p>
 <div class="highlight"><pre><span></span><span class="c1">// main.rs</span>
 <span class="c1">// ...</span>
 
@@ -343,36 +338,47 @@ tak:</p>
 </pre></div>
 
 
-<p><code>clone()</code> jest metodą, która kopiuje obiekt typu <code>string::String</code>. Jest to jedna
-z metod typów, które implementują cechę <code>Clonable</code>.</p>
-<h2>Podsumowanie</h2>
-<p>Udało się nam napisać proste funkcje <code>get_request()</code> oraz <code>send()</code>, co pozwala
-na implementację serwera echo. Jak sprawdzić jego działanie? Można zrobić, np.:</p>
-<div class="highlight"><pre><span></span>cat <span class="p">|</span> netcat <span class="m">127</span>.0.0.1 <span class="m">4000</span>
+<p>The <code>clone()</code> method copies the <code>String</code> object here.</p>
+<h2>Summary</h2>
+<p>We've managed to write simple implementations of <code>get_request()</code> and <code>send()</code>
+methods. One can test the program with a simple shell command:</p>
+<div class="highlight"><pre><span></span>cat request.txt <span class="p">|</span> netcat <span class="m">127</span>.0.0.1 <span class="m">4000</span>
 </pre></div>
 
 
-<p>i zacząć pisać. Pamiętać trzeba, że tylko przy naciśnięciu klawisza enter dwa
-razy z rzędu, nasz serwer wyśle odpowiedź.</p>
-<p>W kolejnych częściach zajmiemy się obsługą błędów (<code>unwrap()</code> nie powinno
-przejść code review w tym przypadku) oraz tym, co tak naprawdę znajduje się w
-pakietach HTTP.</p>
-<h1>Pozostałe części</h1>
+<p>The <code>request.txt</code> file can contain any data that ends with two newlines.
+The contents of the file before the ending sequence should be echoed back.</p>
+<p>In the next parts we are going to talk error handling (<code>unwrap()</code> should not
+pass the code review here) and the contents of HTTP packets.</p>
+<h1>Other parts</h1>
 <ul>
-<li><a href="serwer-proxy-w-ruscie-czesc-5.html">następny post (część 5) (obsługa błędów)</a></li>
-<li><a href="serwer-proxy-w-ruscie-czesc-3.html">poprzedni post (część 3)</a></li>
+<li>next post (part 5) - work in progress</li>
+<li><a href="proxy-server-in-rust-part-3.html">previous post (part 3)</a></li>
 </ul>
-<h3>Przypisy</h3>
-<p><a name="shared-ptr"></a><sup>1</sup> Możliwe jest, aby <code>shared_ptr</code> wskazywał
-na obiekty na stosie, albo na zasoby zupełnie innego typu (np. pliki), ale żeby
-zrobić to dobrze, potrzeba naprawdę solidnej wiedzy dotyczącej zaawansowanego
-C++. Nawet wtedy, nie musi to być bezpiecznym rozwiązaniem.
-(<a href="#backref-1">wróć do tekstu</a>)</p>
-<p><a name="dangling-tlumaczenie"></a><sup>2</sup> Przykro mi, "wiszące referencje"
-nie brzmi najlepiej.
-(<a href="#backref-1">wróć do tekstu</a>)</p>
+<h3>Footnotes</h3>
+<p><a name="shared-ptr"></a><sup>1</sup> It is possible to point <code>shared_ptr</code> to
+memory on the stack or even different resources than memory, but doing it right
+requires great C++ expertise. Even then it's not the safest option.(<a href="#backref-1">back to
+text</a>)</p>
     </article>
 
+    <hr>
+        <div class="comments">
+            <div id="disqus_thread"></div>
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http://kele.github.io/' + 'proxy-server-in-rust-part-4.html';
+                    this.page.identifier = 'disqus-' + 'proxy-server-in-rust-part-4.html';
+                };
+                (function() {  // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+                    s.src = 'https://kele-github-io.disqus.com/embed.js';
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
             </div>
         </div>
     </div>
@@ -395,13 +401,13 @@ nie brzmi najlepiej.
     </footer>
 
     <!-- jQuery -->
-    <script src="../theme/js/jquery.js"></script>
+    <script src="./../theme/js/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="../theme/js/bootstrap.min.js"></script>
+    <script src="./../theme/js/bootstrap.min.js"></script>
 
         <!-- Custom Theme JavaScript -->
-        <script src="../theme/js/clean-blog.min.js"></script>
+        <script src="./../theme/js/clean-blog.min.js"></script>
 
 
 </body>
