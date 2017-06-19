@@ -1,5 +1,5 @@
 Title: Serwer proxy w Ruscie (część 6)
-Date: 2017-06-18
+Date: 2017-06-19
 Category: rust
 Tags: rust, foxy, error handling, macros
 Summary: Działający serwer echo! Parsowanie zapytań, własne cechy i wiele innych.
