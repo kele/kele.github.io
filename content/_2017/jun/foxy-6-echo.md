@@ -32,17 +32,14 @@ Kod dostępny [tutaj](https://github.com/kele/foxy/tree/part6).
     }
 
 ### `ends_with()`
-Pierwszą isostną zmianą jest użycie metody `ends_with()`, która sprawdza czy
+Pierwszą istotną zmianą jest użycie metody `ends_with()`, która sprawdza czy
 napis kończy się danym wzorcem (w tym przypadku są to po prostu dwie sekwencje
 CRLF, czyli nowe linie w kodowaniu DOS).
 
 ### `RequestHeader::parse()`
-Zamiast zapisywać nagłówek w surowej formie, jest on teraz parsowany przez
-funkcję `parse()`. Znak zapytania na końcu służy do odpakowania wartości i
-ewentualnej propagacji błędu.
-
-### Brak ciała
-Na początek skupimy się na obsłudze zapytań `GET`, które zwykle nie mają ciała.
+Wcześniej zapisywaliśmy nagłówek w formie napisu. Teraz jego zawartość jest
+odczytywana przy pomocy funkcji `parse()`.  Znak zapytania na końcu służy do
+odpakowania wyniku i ewentualnej propagacji błędu.
 
 ## Moduł `header`
 
@@ -59,7 +56,7 @@ Nagłówek żądania HTTP ma formę:
 Składa się on z:
 
 - jednej linii zawierającej rodzaj zapytania, URI oraz wersję protokołu,
-- kolejnych linii formatu \<pole\>: \<wartość\>,
+- kolejnych linii formatu `pole: wartość`,
 - "\r\n\r\n" (czyli dwa CRLF).
 
 Do przetwarzania nagłówków utworzymy sobie nowy moduł `header` w pliku
@@ -88,10 +85,10 @@ razie interesować nas będzie wyłącznie `GET`.
         // TODO: add more methods here
     }
 
-Korzystamy z `enum`, ponieważ jest tylko kilka możliwych rodzajów zapytań HTTP i
-chcielibyśmy móc o nich mówić bez każdorazego porównywania napisów "GET", "POST"
-czy "CONNNECT". Drugim argumentem jest fakt, że w taki sposób pomagamy
-kompilatorowi w wyłapywaniu błędów. Przykładowo, dla takiego kodu:
+Korzystamy z `enum`, ponieważ jest tylko kilka możliwych rodzajów zapytań HTTP
+i chcielibyśmy móc o nich mówić bez każdorazowego porównywania napisów `"GET"`,
+`"POST"` czy `"CONNECT"`. Drugim argumentem jest fakt, że w taki sposób
+pomagamy kompilatorowi w wyłapywaniu błędów. Przykładowo, dla takiego kodu:
 
     ::rust
     pub enum Xyz {
@@ -123,7 +120,7 @@ otrzymalibyśmy następujący błąd kompilacji:
 
     error: aborting due to previous error
 
-Dyrektywa `#[derive (Clone, Copy)]` jest tutaj instrukcją do kompilatora, ktora
+Dyrektywa `#[derive (Clone, Copy)]` jest tutaj instrukcją do kompilatora, która
 każe mu zaimplementować cechy `Clone` i `Copy` (obie pozwalają na kopiowanie
 obiektu, w nieco inny sposób, o tym kiedy indziej) dla typu `RequestMethod` na
 podstawie jego składowych.  W tym przypadku, robimy to z dwóch powodów:
@@ -172,7 +169,7 @@ dokonywać na nich wiele innych operacji, które zobaczymy później.
     let request_line = lines.next().unwrap_or_default();
 
 Tutaj właśnie odczytujemy pierwszą linię z obiektu `Lines`. `unwrap()` lub jego
-inna forma sa tutaj konieczne. W tym wypadku, zadowolimy się jeśli w przypadku
+inna forma są tutaj konieczne. W tym wypadku, zadowolimy się jeśli w przypadku
 braku pierwszej linii wynikiem będzie pusty napis.
 
     ::rust
@@ -182,20 +179,21 @@ Odcinamy białe znaki z obu końców `request_line` przy pomocy `trim()`.
 `split_whitespace()` dzieli nasz napis w miejscach w których są białe znaki, zaś
 `collect()` zbiera wynik i zwraca go w formie tablicy `Vec`.
 
-W tym wypadku podpowiedzieliśmy kompilatorow, że `parts` będzie typu `Vec<_>`,
-czyli zmienną będącą dynamiczna tablicą przechowywującą jakiś (`_`) typ. Jest to
-o tyle ważne, że `collect()` może zwrócić dowolny obiekt spełniający cechę
-`FromIterator`. Kiedy już jednak podpowiemy, że chodzi nam o `Vec`, to
-kompilator już będzie w stanie sam uzupełnić sobie brakującą lukę `_`.
+W tym wypadku podpowiedzieliśmy kompilatorowi, że `parts` będzie typu `Vec<_>`,
+czyli zmienną będącą dynamiczna tablicą przechowującą obiekty jakiegoś (`_`)
+typu. Jest to o tyle ważne, że `collect()` może zwrócić dowolny obiekt
+spełniający cechę `FromIterator`. Kiedy już jednak podpowiemy, że chodzi nam o
+`Vec`, to kompilator już będzie w stanie sam uzupełnić sobie brakującą lukę
+`_`.
 
-Jak widać, złożyliśmy tutaj po drodzę kilka funkcji, `trim()`,
+Jak widać, złożyliśmy tutaj po drodze kilka funkcji, `trim()`,
 `split_whitespace()` oraz `collect()`. Takie właśnie złożenia są powszechną
 praktyką w językach funkcyjnych, ale także i w Ruscie. Skracają one kod, a
 często pozwalają na dokonanie optymalizacji (kompilator od razu widzi, że nie
 potrzebujemy pośrednich wyników, bo nie zapisujemy ich nigdzie).
 
 Co ciekawe, zarówno `trim()` jak i `split_whitespace()` nie dokonują żadnego
-kopiowania napisów, po prostu zwrając obiekty typu `&str` (czyli kawałki
+kopiowania napisów, po prostu zwracając obiekty typu `&str` (czyli kawałki
 zaalokowanego już gdzieś napisu).
 
     ::rust
@@ -240,7 +238,7 @@ zmiennych o odpowiednich nazwach.
 Tak jak wcześniej wspomniałem, `trim()` oraz `split_whitespace()` nie kopiują
 napisów, w związku z tym robimy to sami przy pomocy metody `to_owned()` typu
 `&str`, która po prostu zwraca `String`. `parse_fields` jest funkcją, która
-zajmie się odczytywaniem pół nagłówka.
+zajmie się odczytywaniem pól nagłówka.
 
 ### `parse_fields`
     ::rust
@@ -260,9 +258,9 @@ zajmie się odczytywaniem pół nagłówka.
         Ok(fields)
     }
 
-Tak jak poprzednio, argumentem wejściowym jest `Lines` (tym razem bez `mut`,
+Tak jak poprzednio, argumentem wejściowym jest `Lines`. Tym razem bez `mut`,
 ponieważ nie będziemy zmieniać tego obiektu tak jak poprzednio przy pomocy
-`next()`, bedziemy go sobie tylko "oglądać" przy pomocy innych metod).
+`next()`, tylko będziemy go sobie tylko "oglądać" przy pomocy innych metod).
 
 Korzystamy z wbudowanej kolekcji `HashMap` aby przechowywać wartości pól.
 
@@ -316,7 +314,7 @@ na zmienną typu całkowitoliczbowego.
                                 format!("Status code cannot be parsed. Got: {:?}", status_code))
                  })?;
 
-Zmienna `status_code` jest póżniej zapisywana do pola o typie `u16`, więc
+Zmienna `status_code` jest później zapisywana do pola o typie `u16`, więc
 kompilator wie, której wersji metody `parse()` musi tutaj użyć. W przypadku
 niepowodzenia, błąd zwracany przez `parse()` będzie jednak typu innego niż
 `io::Result`, który zwracamy w metodzie `ResponseHeader::parse()`. W związku z
@@ -329,16 +327,16 @@ która przyjmuje funkcję mającą za zadanie skonwertować jeden typ błędu na
 
 ## Zapisywanie do obiektów z cechą `Writer`
 Obiekty implementujące cechę `Writer` udostępniają m.in. metodę `write_all()`,
-która przyjmuje wycinek tablicy (slice) bajtow (`u8`), aby ją zapisać. Pewnym
-smutnym skutkiem ubocznym takiego interfejsu jest to, że cały obiekt trzeba
+która przyjmuje wycinek tablicy (slice) bajtów (`u8`), aby ją zapisać. Pewnym
+przykrym skutkiem ubocznym takiego interfejsu jest to, że cały obiekt trzeba
 zakodować w formie `&[u8]` zanim przekaże się go pisarzowi. W przypadku
 nagłówków HTTP, nie byłby to zapewne zbyt kosztowny proces, ale skoro możemy
 zrobić to wydajniej, to czemu nie spróbować?
 
 Jednym ze wzorców, które znam z C++ (`operator<<`) czy Go, jest implementowanie
 przez obiekty przeznaczone do zapisu metody (nazwijmy ją `write_to`), która
-przyjmuje `Writer` i zapisuje się do niego po kawałku, bez konieczności
-budowania całego obiektu jako spójny ciąg bajtów. Zastanawiałem się, czy Rust
+przyjmuje `Writer`. Najczęściej ich implementacje nie budują całego obiektu jako
+spójny ciąg bajtów, tylko zapisują go po kawałku. Zastanawiałem się, czy Rust
 oferuje jakieś inne rozwiązania lub gotowe cechy, które tylko trzeba
 zaimplementować. Zapytałem na kanale IRC **#rust-beginners** i okazało się, że
 nie ma niczego podobnego w bibliotece standardowej i metoda taka jak:
@@ -389,7 +387,7 @@ implementacja `send()` stanie się trywialna:
     }
 
 `where` użyte jest tutaj dla wygody, aby nie zaciemniać deklaracji `send`.
-Zamiast tego, możnaby po prostu napisać:
+Zamiast tego, można by po prostu napisać:
 
     ::rust
     pub fn send<WT: WriteTo<BufWriter<&'a net::TcpStream>>>(&mut self, packet: &WT) -> Result<()>
@@ -480,7 +478,7 @@ linii.
     }
 
 Budujemy `http:Response` ustawiając status na `200 OK`, kopiujemy wersję
-protokołu z żądania, oraz zapisujemy całe (łącznie z nagłówkiem) żadanie w
+protokołu z żądania, oraz zapisujemy całe (łącznie z nagłówkiem) żądanie w
 `response_body`, pamiętając o ustawieniu pola `Content-Length` w nagłówku.
 
 ## Podsumowanie
@@ -495,6 +493,6 @@ przetestować nasze proxy, ponieważ wysyłanie dowolnego innego zapytania niż
 `Content-Length` ręcznie).
 
 # Pozostałe części
+
 - następny post (część 7) w przygotowaniu
 - [poprzedni post (część 5) (obsługa błędów, makra)](serwer-proxy-w-ruscie-czesc-5.html)
-
