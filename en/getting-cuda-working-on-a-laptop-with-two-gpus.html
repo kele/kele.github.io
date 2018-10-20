@@ -11,17 +11,17 @@
 
         <title>Getting CUDA working on a laptop with two GPUs</title>
 
-            <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
-            <link href="http://kele.github.io/feeds/cuda.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
+            <link href="http://kele.codes/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Full Atom Feed" />
+            <link href="http://kele.codes/feeds/cuda.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Categories Atom Feed" />
 
         <!-- Bootstrap Core CSS -->
-        <link href="./../theme/css/bootstrap.css" rel="stylesheet">
+        <link href="././theme/css/bootstrap.css" rel="stylesheet">
 
         <!-- Custom CSS -->
-        <link href="./../theme/css/clean-blog.css" rel="stylesheet">
+        <link href="././theme/css/clean-blog.css" rel="stylesheet">
 
         <!-- Code highlight color scheme -->
-            <link href="./../theme/css/code_blocks/darkly.css" rel="stylesheet">
+            <link href="././theme/css/code_blocks/darkly.css" rel="stylesheet">
 
 
         <!-- Custom Fonts -->
@@ -43,8 +43,8 @@
         <meta name="tags" contents="neural networks" />
 
 
-	                <meta property="og:locale" content="pl_PL.utf8">
-		<meta property="og:site_name" content="kele.github.io">
+	                <meta property="og:locale" content="en_EN.utf8">
+		<meta property="og:site_name" content="kele.codes">
 
 	<meta property="og:type" content="article">
 	<meta property="article:author" content="">
@@ -68,7 +68,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="./">kele.github.io</a>
+                <a class="navbar-brand" href="./">kele.codes</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -83,13 +83,13 @@
     </nav>
 
     <!-- Page Header -->
-        <header class="intro-header" style="background-image: url('./../theme/images/header.jpg')">
+        <header class="intro-header" style="background-image: url('././theme/images/header.jpg')">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     <div class="post-heading">
                         <h1>Getting CUDA working on a laptop with two GPUs</h1>
-                        <span class="meta">pon 18 styczeń 2016</span>
+                        <span class="meta">Mon 18 January 2016</span>
                         
                     </div>
                 </div>
@@ -130,13 +130,13 @@ options nouveau <span class="nv">modeset</span><span class="o">=</span><span cla
 <p>Add bumblebee and xorg-edgers repositories:</p>
 <div class="highlight"><pre><span></span>sudo apt-add-repository ppa:bumblebee/stable -y
 sudo add-apt-repository ppa:xorg-edgers/ppa -y
-sudo apt-get update <span class="o">&amp;&amp;</span> sudo apt-get upgrade -y
+sudo apt-get update <span class="p">&amp;</span>amp<span class="p">;&amp;</span>amp<span class="p">;</span> sudo apt-get upgrade -y
 </pre></div>
 
 
 <p>Now it's time to install the CUDA toolkit (along with <code>nvidia-352</code> drivers).</p>
 <div class="highlight"><pre><span></span><span class="c1"># This installs necessary headers.</span>
-sudo apt-get install linux-source <span class="o">&amp;&amp;</span> sudo apt-get install linux-headers-<span class="k">$(</span>uname -r<span class="k">)</span>
+sudo apt-get install linux-source <span class="p">&amp;</span>amp<span class="p">;&amp;</span>amp<span class="p">;</span> sudo apt-get install linux-headers-<span class="k">$(</span>uname -r<span class="k">)</span>
 
 <span class="c1"># USE THE REAL PACKAGE NAME BELOW</span>
 sudo dpkg -i cuda-repo-ubuntu1404-7-5-local_7.5-18_amd64.deb
@@ -218,13 +218,13 @@ blacklist nvidia-experimental-352
     </footer>
 
     <!-- jQuery -->
-    <script src="./../theme/js/jquery.js"></script>
+    <script src="././theme/js/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="./../theme/js/bootstrap.min.js"></script>
+    <script src="././theme/js/bootstrap.min.js"></script>
 
         <!-- Custom Theme JavaScript -->
-        <script src="./../theme/js/clean-blog.min.js"></script>
+        <script src="././theme/js/clean-blog.min.js"></script>
 
 
 </body>

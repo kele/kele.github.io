@@ -11,17 +11,17 @@
 
         <title>Proxy server in Rust (part 3)</title>
 
-            <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
-            <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
+            <link href="http://kele.codes/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Full Atom Feed" />
+            <link href="http://kele.codes/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Categories Atom Feed" />
 
         <!-- Bootstrap Core CSS -->
-        <link href="./../theme/css/bootstrap.css" rel="stylesheet">
+        <link href="././theme/css/bootstrap.css" rel="stylesheet">
 
         <!-- Custom CSS -->
-        <link href="./../theme/css/clean-blog.css" rel="stylesheet">
+        <link href="././theme/css/clean-blog.css" rel="stylesheet">
 
         <!-- Code highlight color scheme -->
-            <link href="./../theme/css/code_blocks/darkly.css" rel="stylesheet">
+            <link href="././theme/css/code_blocks/darkly.css" rel="stylesheet">
 
 
         <!-- Custom Fonts -->
@@ -43,8 +43,8 @@
         <meta name="tags" contents="foxy" />
 
 
-	                <meta property="og:locale" content="pl_PL.utf8">
-		<meta property="og:site_name" content="kele.github.io">
+	                <meta property="og:locale" content="en_EN.utf8">
+		<meta property="og:site_name" content="kele.codes">
 
 	<meta property="og:type" content="article">
 	<meta property="article:author" content="">
@@ -68,7 +68,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="./">kele.github.io</a>
+                <a class="navbar-brand" href="./">kele.codes</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -83,13 +83,13 @@
     </nav>
 
     <!-- Page Header -->
-        <header class="intro-header" style="background-image: url('./../theme/images/header.jpg')">
+        <header class="intro-header" style="background-image: url('././theme/images/header.jpg')">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     <div class="post-heading">
                         <h1>Proxy server in Rust (part 3)</h1>
-                        <span class="meta">pon 19 czerwiec 2017</span>
+                        <span class="meta">Mon 19 June 2017</span>
                         
                     </div>
                 </div>
@@ -147,8 +147,8 @@ popular modern programming languages.</p>
 <div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">T</span><span class="p">{};</span><span class="w"></span>
 
 <span class="n">foo</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="n">xyz</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="n">xyz</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="k">mut</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 
@@ -174,7 +174,7 @@ things:</p>
 
 <p>trying to compile the above code will result in an error:</p>
 <div class="highlight"><pre><span></span>error[E0382]: use of moved value: `x`
- --&gt; &lt;anon&gt;:7:9
+ --&amp;gt; &amp;lt;anon&amp;gt;:7:9
   |
   |     foo(x);
   |         - value moved here
@@ -201,8 +201,8 @@ reference counting, no garbage collecting).</p>
 give <code>x</code> back in an untouched state. This means that <code>x</code> is lended to <code>bar()</code> in
 a <strong>read only</strong> way.</p>
 <p>This allows us to safely write code such as:</p>
-<div class="highlight"><pre><span></span><span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="n">bar</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 
@@ -246,7 +246,7 @@ definition of <code>HttpStream</code> looks as follows:</p>
 <span class="p">}</span><span class="w"></span>
 
 <span class="k">impl</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">tcp</span>: <span class="nc">net</span>::<span class="n">TcpStream</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">tcp</span>: <span class="nc">tcp</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
@@ -272,8 +272,8 @@ want <code>tcp</code> to be a public field.</p>
 
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="o">!</span><span class="n">h</span><span class="p">.</span><span class="n">is_closed</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
-<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">                </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while getting http request: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w"></span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
 <span class="w">            </span><span class="p">}</span><span class="w"></span>
@@ -293,12 +293,12 @@ want <code>tcp</code> to be a public field.</p>
 <span class="k">impl</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="c1">// ...</span>
 
-<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">get</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="n">HttpPacket</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">get</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">io</span>::<span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">HttpPacket</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="c1">// TODO</span>
 <span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="n">HttpPacket</span><span class="w"> </span><span class="p">{})</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 
-<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">is_closed</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="kt">bool</span> <span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">is_closed</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="c1">// TODO</span>
 <span class="w">        </span><span class="kc">false</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
@@ -339,19 +339,19 @@ not.</p>
 
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="o">!</span><span class="n">h</span><span class="p">.</span><span class="n">is_closed</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
-<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Ok</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">                </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Error while getting http request: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w"></span>
 <span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
 <span class="w">            </span><span class="p">}</span><span class="w"></span>
 <span class="w">        </span><span class="p">};</span><span class="w"></span>
-<span class="w">        </span><span class="n">h</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">http</span>::<span class="n">HttpPacket</span><span class="p">{});</span><span class="w"></span>
+<span class="w">        </span><span class="n">h</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">http</span>::<span class="n">HttpPacket</span><span class="p">{});</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
 
-<p>And here's a dummy implementation of <code>send</code>:</p>
+<p>And here's a dummy implementationof <code>send</code>:</p>
 <div class="highlight"><pre><span></span><span class="c1">// http/mod.rs</span>
 
 <span class="c1">// ...</span>
@@ -359,7 +359,7 @@ not.</p>
 <span class="k">impl</span><span class="w"> </span><span class="n">HttpStream</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="c1">// ...</span>
 
-<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">send</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span>: <span class="kp">&amp;</span><span class="nc">HttpPacket</span><span class="p">)</span><span class="w"> </span><span class="n">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">packet</span>: <span class="kp">&amp;</span><span class="nc">amp</span><span class="p">;</span><span class="n">HttpPacket</span><span class="p">)</span><span class="w"> </span><span class="n">io</span>::<span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;()</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
@@ -377,7 +377,7 @@ possible to understand any meaningful code.</p>
 <h1>Other parts</h1>
 <ul>
 <li><a href="proxy-server-in-rust-part-4.html">next post (part 4)</a></li>
-<li><a href="proxy-server-in-rust-part-2.html">previous post (part 2)</a></li>
+<li><a href="proxy-server-in-rust-2.html">previous post (part 2)</a></li>
 </ul>
 <hr>
 
@@ -428,13 +428,13 @@ net::TcpStream</code> - no mutability needed here. (<a href="#backref-2">go back
     </footer>
 
     <!-- jQuery -->
-    <script src="./../theme/js/jquery.js"></script>
+    <script src="././theme/js/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="./../theme/js/bootstrap.min.js"></script>
+    <script src="././theme/js/bootstrap.min.js"></script>
 
         <!-- Custom Theme JavaScript -->
-        <script src="./../theme/js/clean-blog.min.js"></script>
+        <script src="././theme/js/clean-blog.min.js"></script>
 
 
 </body>

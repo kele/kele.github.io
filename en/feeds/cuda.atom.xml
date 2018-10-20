@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.github.io - cuda</title><link href="http://kele.github.io/en/" rel="alternate"></link><link href="http://kele.github.io/feeds/cuda.atom.xml" rel="self"></link><id>http://kele.github.io/en/</id><updated>2016-01-18T00:00:00+01:00</updated><entry><title>Getting CUDA working on a laptop with two GPUs</title><link href="http://kele.github.io/en/getting-cuda-working-on-a-laptop-with-two-gpus.html" rel="alternate"></link><published>2016-01-18T00:00:00+01:00</published><updated>2016-01-18T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:kele.github.io,2016-01-18:/en/getting-cuda-working-on-a-laptop-with-two-gpus.html</id><summary type="html">&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
+<feed xmlns="http://www.w3.org/2005/Atom"><title>kele.codes - cuda</title><link href="http://kele.codes/en/" rel="alternate"></link><link href="http://kele.codes/feeds/cuda.atom.xml" rel="self"></link><id>http://kele.codes/en/</id><updated>2016-01-18T00:00:00+01:00</updated><entry><title>Getting CUDA working on a laptop with two GPUs</title><link href="http://kele.codes/en/getting-cuda-working-on-a-laptop-with-two-gpus.html" rel="alternate"></link><published>2016-01-18T00:00:00+01:00</published><updated>2016-01-18T00:00:00+01:00</updated><author><name>kele</name></author><id>tag:kele.codes,2016-01-18:/en/getting-cuda-working-on-a-laptop-with-two-gpus.html</id><summary type="html">&lt;p&gt;I had a lot of trouble setting up my laptop NVIDIA GPU with CUDA on Ubuntu
 14.04. These steps might actually help somebody.&lt;/p&gt;
 &lt;p&gt;First, download the &lt;a href="http://developer.nvidia.com/cuda-downloads"&gt;NVIDIA CUDA Toolkit&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Remove all old NVIDIA-related drivers:&lt;/p&gt;
@@ -35,13 +35,13 @@ options nouveau &lt;span class="nv"&gt;modeset&lt;/span&gt;&lt;span class="o"&gt
 &lt;p&gt;Add bumblebee and xorg-edgers repositories:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-add-repository ppa:bumblebee/stable -y
 sudo add-apt-repository ppa:xorg-edgers/ppa -y
-sudo apt-get update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get upgrade -y
+sudo apt-get update &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;amp&lt;span class="p"&gt;;&amp;amp;&lt;/span&gt;amp&lt;span class="p"&gt;;&lt;/span&gt; sudo apt-get upgrade -y
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Now it's time to install the CUDA toolkit (along with &lt;code&gt;nvidia-352&lt;/code&gt; drivers).&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# This installs necessary headers.&lt;/span&gt;
-sudo apt-get install linux-source &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; sudo apt-get install linux-headers-&lt;span class="k"&gt;$(&lt;/span&gt;uname -r&lt;span class="k"&gt;)&lt;/span&gt;
+sudo apt-get install linux-source &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;amp&lt;span class="p"&gt;;&amp;amp;&lt;/span&gt;amp&lt;span class="p"&gt;;&lt;/span&gt; sudo apt-get install linux-headers-&lt;span class="k"&gt;$(&lt;/span&gt;uname -r&lt;span class="k"&gt;)&lt;/span&gt;
 
 &lt;span class="c1"&gt;# USE THE REAL PACKAGE NAME BELOW&lt;/span&gt;
 sudo dpkg -i cuda-repo-ubuntu1404-7-5-local_7.5-18_amd64.deb

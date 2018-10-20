@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+            <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+
+        <title>Serwer proxy w Ruscie (część 5)</title>
+
+            <link href="http://kele.codes/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Full Atom Feed" />
+            <link href="http://kele.codes/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Categories Atom Feed" />
+
+        <!-- Bootstrap Core CSS -->
+        <link href="././theme/css/bootstrap.css" rel="stylesheet">
+
+        <!-- Custom CSS -->
+        <link href="././theme/css/clean-blog.css" rel="stylesheet">
+
+        <!-- Code highlight color scheme -->
+            <link href="././theme/css/code_blocks/darkly.css" rel="stylesheet">
+
+
+        <!-- Custom Fonts -->
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+
+
+
+        <meta name="tags" contents="rust" />
+        <meta name="tags" contents="foxy" />
+        <meta name="tags" contents="error handling" />
+        <meta name="tags" contents="macros" />
+
+
+	                <meta property="og:locale" content="en_EN.utf8">
+		<meta property="og:site_name" content="kele.codes">
+
+	<meta property="og:type" content="article">
+	<meta property="article:author" content="">
+	<meta property="og:url" content="./serwer-proxy-w-ruscie-czesc-5-pl.html">
+	<meta property="og:title" content="Serwer proxy w Ruscie (część 5)">
+	<meta property="og:description" content="">
+	<meta property="og:image" content="./">
+	<meta property="article:published_time" content="2017-06-17 00:00:00+02:00">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="./">kele.codes</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+        <header class="intro-header" style="background-image: url('././theme/images/header.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Serwer proxy w Ruscie (część 5)</h1>
+                        <span class="meta">Sat 17 June 2017</span>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+    <!-- Post Content -->
+    <article>
+        <h2>Błędy, błędy, wszędzie błędy</h2>
+<p>Dopóki pisze się małe skrypty dla własnego użytku, obsługa błędów nie jest tak
+istotna. Kiedy tylko zaczyna się <strong>(a)</strong> pisać oprogramowanie dla innych,
+<strong>(b)</strong> korzystać z wejścia/wyjścia (pliki, połączenia sieciowe, itd.), to nagle
+okazuje się, że obsługa błędów zajmuje naprawdę dużo czasu programisty.</p>
+<h2>Bez wyjątków</h2>
+<p>Jedną z technik jakie kiedyś wymyślono, żeby obsługa błędów była mniej
+uciążliwa dla programisty jest mechanizm wyjątków (exceptions). Większość
+popularnych języków (Java, C#, C++, Python) wspiera wyjątki.</p>
+<p>Dwa największe problemy tego rozwiązania to:</p>
+<ul>
+<li>spadek wydajności,</li>
+<li>łatwo można zignorować obsługę wyjątku.</li>
+</ul>
+<p>Pierwsza wada dotyczy zastosowań, w których <strong>wydajność (lub minimalizowanie
+opóźnień) gra kluczową rolę dla działania systemu</strong>. Rust jest językiem, który
+jest przeznaczony m.in. do takich zastosowań. Drugi problem byłby także dużą
+skazą dla języka, który tak wiele robi aby oprogramowanie było bezpieczne.</p>
+<h3>Go</h3>
+<p>Jednym ze współczesnych języków programowania, które nie wspierają mechanizmu
+wyjątków jest Go. W tym przypadku, obsługa błędów wygląda mniej więcej jak w C.</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">foo</span><span class="p">();</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">err</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Powyższy kawałek kodu pojawia się naprawdę bardzo, bardzo często. Na tyle, że
+możnaby pomyśleć o sprawieniu sobie takiej klawiatury specjalnie do pisania w
+Go:</p>
+<p><a href="https://www.reddit.com/r/ProgrammerHumor/comments/6fmlxj/introducing_the_go_keyboard/"><img alt="/r/ProgrammingHumor" src="http://i.imgur.com/EVc3Nm0.png" title="/r/ProgrammingHumor"></a></p>
+<h2>Jak robi to Rust?</h2>
+<p>Rust ma nieco inne podejście. Przy pomocy swojego systemu typów, stara się
+osiągnąć:</p>
+<ul>
+<li>trudną do zignorowania obsługę błędów,</li>
+<li>brak spadku wydajności spowodowanego obsługą wyjątków.</li>
+</ul>
+<h3><code>Option</code>, <code>Result</code></h3>
+<p>Bazą są typy <code>Option</code> i <code>Result</code>, o których wspominałem już w poprzednich
+postach. Pierwszy reprezentuje <strong>coś albo nic</strong> (podobnie jak
+<a href="http://en.cppreference.com/w/cpp/utility/optional">std::optional</a> z C++), drugi
+zaś <strong>wartość albo błąd</strong>. W obu przypadkach <strong>albo</strong> należy rozumieć jako
+<strong>dokładnie jedna z możliwości</strong>.</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Option</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
+<span class="k">match</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Some</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">None</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Oops, coś poszło nie tak.&quot;</span><span class="p">),</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Jak można się domyślać, obiekty typu <code>Option</code> lub <code>Result</code> nie mogą być użyte
+"wprost". Zawsze trzeba je jakoś odpakować. Najprościej można to zrobić przy
+pomocy metody <code>unwrap()</code>:</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Option</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
+<span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">unwrap</span><span class="p">());</span><span class="w"></span>
+</pre></div>
+
+
+<p>Co się wtedy stanie? <code>unwrap()</code> zwróci wartość jeśli <code>Option</code> ją zawiera, a
+jeśli nie, wywołane zostanie <code>panic!</code> (kończące pracę działania programu).
+Oprócz <code>unwrap()</code> zaimplementowano też kilka innych, bardzo przydantych metod:</p>
+<ul>
+<li><code>unwrap_or(v)</code> - odpakuj, a jeśli nic nie znajdziesz, zwróć <code>v</code></li>
+<li><code>unwrap_or_default()</code> - zwróć domyślną wartość, jeśli nic nie znajdziesz.</li>
+</ul>
+<p>W związku z tym, wydaje się, że każde solidne narzędzie do code review dla Rusta
+powinno podświetlać <code>unwrap()</code> na czerwono. :)</p>
+<h3><code>try!</code> oraz <code>?</code></h3>
+<p>Jak widać, <code>Option</code> niezbyt ustrzega nas przed pisaniem kodu podobnego do tego w
+Go. W tym może nam pomóc typ <code>Result</code>, który można użyć w ten sposób:</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
+
+<span class="k">match</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">),</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Taka konstrukcja, jak można się domyślać, byłaby używana bardzo, bardzo często.
+W związku z tym, można ją skrócić do:</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
+
+<span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">try</span><span class="o">!</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"></span>
+</pre></div>
+
+
+<p>lub</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
+
+<span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">?</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+
+
+<p>Ta druga forma jest szczególnie przydatna, kiedy chcemy coś odpakować z kilku
+warstw. <code>?</code> jest jedynie lukrem syntaktycznym i jest równoważne użyciu <code>try!</code>.</p>
+<h2>Kilka słów o makrach</h2>
+<p>Zarówno <code>try!</code> jak i <code>panic!</code>, <code>println!</code>, <code>write!</code> są makrami. Ich cechą
+wspólną jest to, że ich wywołania zawierają w sobie <code>!</code>, w przeciwieństwie do
+funkcji. Ze względu na bardzo rygorystyczny system typów Rusta, niektóre wzorce
+trudno jest zapisać jako zwyczajne funkcje. Wtedy przychodzą z pomocą makra.</p>
+<p>Makra, podobnie jak w C, są po prostu lukrem syntaktycznym i są zamieniane na
+swoje ciało podczas kompilacji. W przeciwieństwie do C, makra w Ruscie są
+bardziej zaawansowane i mniej podatne na nadużycia (np. nie da się zrobić
+<code>#define true false</code>).</p>
+<p>Na razie niewiele wiem o pisaniu makr, dlatego ograniczymy się do ich używania,
+zamiast tworzyć nowe (prawdopodobnie zbędne).</p>
+<h2>Wracamy do <code>try!</code></h2>
+<p>Skoro wiemy już, że <code>try!</code> jest makrem, warto byłoby się dowiedzieć jak ono
+działa.</p>
+<p><em>(...) In case of the Err variant, it retrieves the inner error. <strong>try! then
+performs conversion using From.</strong> This provides automatic conversion between
+specialized errors and more general ones. The resulting error is then
+immediately returned. (...)</em>
+<a href="https://doc.rust-lang.org/nightly/std/macro.try.html">rust-lang.org</a></p>
+<p>Rust unika niejawnych konwersji (np. między kawałkiem napisu <code>&amp;str</code>
+a obiektem, który jest napisem i właścicielem pamięci, w której się on znajduje
+<code>String</code>). W związku z tym, pisząc kod często możemy się natknąć na to, że
+funkcja, w której używamy <code>try!</code> zwraca inny typ błędu niż wartość, którą chcemy
+odpakować. Wtedy przydaje się cecha <code>std::convert::From</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">trait</span><span class="w"> </span><span class="nb">From</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">T</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">Self</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Oznacza ona po prostu tyle co: z obiektu <code>T</code> możemy zrobić obiekt <code>Self</code>.</p>
+<p>Przykładowo, jeśli wynikiem działania naszej funkcji mógłby być <code>io::Error</code> (np.
+zerwane połączenie TCP), lub <code>str::Utf8Error</code> (nie udało się poprawnie odczytać
+napisu), to moglibyśmy napisać sobie taki kod:</p>
+<div class="highlight"><pre><span></span><span class="k">enum</span> <span class="nc">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Utf8</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">Io</span><span class="p">(</span><span class="n">io</span>::<span class="n">Error</span><span class="p">),</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Utf8Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">_</span>: <span class="nc">Utf8Error</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">Self</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">MyError</span>::<span class="n">Utf8</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">io</span>::<span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">e</span>: <span class="nc">io</span>::<span class="n">Error</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">Self</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">MyError</span>::<span class="n">Io</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">utf8</span><span class="p">()</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Utf8Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">read</span><span class="p">()</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">io</span>::<span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">foo</span><span class="p">()</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">MyError</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utf8</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+
+<p>Powiedzieliśmy w ten sposób kompilatorowi, w jaki sposób powinien przekształcać
+jeden rodzaj błędów na inny. W tym przypadku zdecydowaliśmy, że nie interesują
+nas szczegóły błędu <code>Utf8Error</code> w związku z tym zignorowaliśmy jego zawartość,
+ale już <code>io::Error</code> jest dla nas interesujące. Oba typy błędów mogą znaleźć się
+teraz w <code>MyError</code> i swobodnie można używać <code>?</code>.</p>
+<p>Dopisanie implementacji cechy <code>From</code> wydaje się żmudną pracą, ale za te kilka
+linijek dostajemy dużo większą kontrolę nad obsługą błędów, bez ryzyka
+przypadkowych zupełnie konwersji.</p>
+<h2>Podsumowanie</h2>
+<p>W tej części nie napisaliśmy żadnego kodu, który znajdzie się w
+implementacji naszego serwera HTTP. Niemniej jednak, aby był on odporny na
+różnego rodzaju problemy (chcę go używać cały czas), zrozumienie obsługi błędów
+w Ruscie będzie kluczowe dla powodzenia tego projektu. :)</p>
+<h1>Pozostałe części</h1>
+<ul>
+<li>następny post (część 6) w przygotowaniu</li>
+<li><a href="serwer-proxy-w-ruscie-czesc-4.html">poprzedni post (część 4) (serwer echo, lifetimes)</a></li>
+</ul>
+    </article>
+
+    <hr>
+        <div class="comments">
+            <div id="disqus_thread"></div>
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http://kele.github.io/' + 'serwer-proxy-w-ruscie-czesc-5-pl.html';
+                    this.page.identifier = 'disqus-' + 'serwer-proxy-w-ruscie-czesc-5-pl.html';
+                };
+                (function() {  // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+                    s.src = 'https://kele-github-io.disqus.com/embed.js';
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <ul class="list-inline text-center">
+                    </ul>
+<p class="copyright text-muted">
+    Blog powered by <a href="http://getpelican.com">Pelican</a>,
+    which takes great advantage of <a href="http://python.org">Python</a>.
+</p>                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="././theme/js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="././theme/js/bootstrap.min.js"></script>
+
+        <!-- Custom Theme JavaScript -->
+        <script src="././theme/js/clean-blog.min.js"></script>
+
+
+</body>
+
+</html>

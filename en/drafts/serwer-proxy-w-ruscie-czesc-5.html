@@ -11,17 +11,17 @@
 
         <title>Serwer proxy w Ruscie (część 5)</title>
 
-            <link href="http://kele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Full Atom Feed" />
-            <link href="http://kele.github.io/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.github.io Categories Atom Feed" />
+            <link href="http://kele.codes/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Full Atom Feed" />
+            <link href="http://kele.codes/feeds/rust.atom.xml" type="application/atom+xml" rel="alternate" title="kele.codes Categories Atom Feed" />
 
         <!-- Bootstrap Core CSS -->
-        <link href="../../theme/css/bootstrap.css" rel="stylesheet">
+        <link href=".././theme/css/bootstrap.css" rel="stylesheet">
 
         <!-- Custom CSS -->
-        <link href="../../theme/css/clean-blog.css" rel="stylesheet">
+        <link href=".././theme/css/clean-blog.css" rel="stylesheet">
 
         <!-- Code highlight color scheme -->
-            <link href="../../theme/css/code_blocks/darkly.css" rel="stylesheet">
+            <link href=".././theme/css/code_blocks/darkly.css" rel="stylesheet">
 
 
         <!-- Custom Fonts -->
@@ -45,8 +45,8 @@
         <meta name="tags" contents="macros" />
 
 
-	                <meta property="og:locale" content="pl_PL.utf8">
-		<meta property="og:site_name" content="kele.github.io">
+	                <meta property="og:locale" content="en_EN.utf8">
+		<meta property="og:site_name" content="kele.codes">
 
 	<meta property="og:type" content="article">
 	<meta property="article:author" content="">
@@ -70,7 +70,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="../">kele.github.io</a>
+                <a class="navbar-brand" href="../">kele.codes</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -85,13 +85,13 @@
     </nav>
 
     <!-- Page Header -->
-        <header class="intro-header" style="background-image: url('../../theme/images/header.jpg')">
+        <header class="intro-header" style="background-image: url('.././theme/images/header.jpg')">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     <div class="post-heading">
                         <h1>Serwer proxy w Ruscie (część 5)</h1>
-                        <span class="meta">sob 17 czerwiec 2017</span>
+                        <span class="meta">Sat 17 June 2017</span>
                         
                     </div>
                 </div>
@@ -149,10 +149,10 @@ postach. Pierwszy reprezentuje <strong>coś albo nic</strong> (podobnie jak
 <a href="http://en.cppreference.com/w/cpp/utility/optional">std::optional</a> z C++), drugi
 zaś <strong>wartość albo błąd</strong>. W obu przypadkach <strong>albo</strong> należy rozumieć jako
 <strong>dokładnie jedna z możliwości</strong>.</p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Option</span><span class="o">&lt;</span><span class="kt">i32</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Option</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
 <span class="k">match</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nb">Some</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">),</span><span class="w"></span>
-<span class="w">    </span><span class="nb">None</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Oops, coś poszło nie tak.&quot;</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Some</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">None</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Oops, coś poszło nie tak.&quot;</span><span class="p">),</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
@@ -160,7 +160,7 @@ zaś <strong>wartość albo błąd</strong>. W obu przypadkach <strong>albo</str
 <p>Jak można się domyślać, obiekty typu <code>Option</code> lub <code>Result</code> nie mogą być użyte
 "wprost". Zawsze trzeba je jakoś odpakować. Najprościej można to zrobić przy
 pomocy metody <code>unwrap()</code>:</p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Option</span><span class="o">&lt;</span><span class="kt">i32</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Option</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
 <span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">unwrap</span><span class="p">());</span><span class="w"></span>
 </pre></div>
 
@@ -177,25 +177,25 @@ powinno podświetlać <code>unwrap()</code> na czerwono. :)</p>
 <h3><code>try!</code> oraz <code>?</code></h3>
 <p>Jak widać, <code>Option</code> niezbyt ustrzega nas przed pisaniem kodu podobnego do tego w
 Go. W tym może nam pomóc typ <code>Result</code>, który można użyć w ten sposób:</p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="o">&lt;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
 
 <span class="k">match</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">),</span><span class="w"></span>
-<span class="w">    </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nb">Err</span><span class="p">(</span><span class="n">e</span><span class="p">),</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
 
 <p>Taka konstrukcja, jak można się domyślać, byłaby używana bardzo, bardzo często.
 W związku z tym, można ją skrócić do:</p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="o">&lt;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
 
 <span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">try</span><span class="o">!</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"></span>
 </pre></div>
 
 
 <p>lub</p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="o">&lt;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">x</span>: <span class="nb">Result</span><span class="kp">&amp;</span><span class="nc">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span><span class="w"></span>
 
 <span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Nasza liczba: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">?</span><span class="p">)</span><span class="w"></span>
 </pre></div>
@@ -227,8 +227,8 @@ a obiektem, który jest napisem i właścicielem pamięci, w której się on zna
 <code>String</code>). W związku z tym, pisząc kod często możemy się natknąć na to, że
 funkcja, w której używamy <code>try!</code> zwraca inny typ błędu niż wartość, którą chcemy
 odpakować. Wtedy przydaje się cecha <code>std::convert::From</code>:</p>
-<div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">trait</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Self</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">trait</span><span class="w"> </span><span class="nb">From</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">T</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">Self</span><span class="p">;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 
@@ -242,27 +242,27 @@ napisu), to moglibyśmy napisać sobie taki kod:</p>
 <span class="w">    </span><span class="n">Io</span><span class="p">(</span><span class="n">io</span>::<span class="n">Error</span><span class="p">),</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 
-<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">Utf8Error</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">_</span>: <span class="nc">Utf8Error</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Self</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Utf8Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">_</span>: <span class="nc">Utf8Error</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">Self</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="n">MyError</span>::<span class="n">Utf8</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 
-<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">io</span>::<span class="n">Error</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">e</span>: <span class="nc">io</span>::<span class="n">Error</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Self</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">io</span>::<span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MyError</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">e</span>: <span class="nc">io</span>::<span class="n">Error</span><span class="p">)</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">Self</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="n">MyError</span>::<span class="n">Io</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 
-<span class="k">fn</span> <span class="nf">utf8</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nb">Result</span><span class="o">&lt;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Utf8Error</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">fn</span> <span class="nf">utf8</span><span class="p">()</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">Utf8Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 
-<span class="k">fn</span> <span class="nf">read</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nb">Result</span><span class="o">&lt;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">io</span>::<span class="n">Error</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">fn</span> <span class="nf">read</span><span class="p">()</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">io</span>::<span class="n">Error</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 
-<span class="k">fn</span> <span class="nf">foo</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nb">Result</span><span class="o">&lt;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">MyError</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">fn</span> <span class="nf">foo</span><span class="p">()</span><span class="w"> </span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="n">MyError</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utf8</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"></span>
@@ -312,13 +312,13 @@ w Ruscie będzie kluczowe dla powodzenia tego projektu. :)</p>
     </footer>
 
     <!-- jQuery -->
-    <script src="../../theme/js/jquery.js"></script>
+    <script src=".././theme/js/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="../../theme/js/bootstrap.min.js"></script>
+    <script src=".././theme/js/bootstrap.min.js"></script>
 
         <!-- Custom Theme JavaScript -->
-        <script src="../../theme/js/clean-blog.min.js"></script>
+        <script src=".././theme/js/clean-blog.min.js"></script>
 
 
 </body>
