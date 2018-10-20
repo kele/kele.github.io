@@ -3,15 +3,15 @@
 from __future__ import unicode_literals
 
 AUTHOR = 'kele'
-SITENAME = 'kele.github.io'
-SITEURL = 'http://kele.github.io'
+SITENAME = 'kele.codes'
+SITEURL = 'http://kele.codes'
 
 PATH = 'content'
 
-TIMEZONE = 'Europe/Warsaw'
+TIMEZONE = 'Europe/Zurich'
 
-DEFAULT_LANG = 'pl'
-LOCALE = ('pl_PL.utf8')
+DEFAULT_LANG = 'en'
+LOCALE = ('en_EN.utf8')
 
 THEME = './clean-theme'
 
