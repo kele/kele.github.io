@@ -25,8 +25,8 @@
 {% endblock header %}
 
 {% block content %}
-    <strong>Blog w wersji polskiej:</strong> <a href="http://kele.github.io">kele.github.io</a>. <br />
-    <strong>This blog is available in English version here:</strong> <a href="http://kele.github.io/en">kele.github.io/en</a>.<br/ >
+    <strong>Blog w wersji polskiej:</strong> <a href="http://kele.codes/pl">kele.codes/pl</a>. <br />
+    <strong>This blog is available in English version here:</strong> <a href="http://kele.codes">kele.codes/en</a>.<br/ >
     {% for article in articles_page.object_list %}
         <div class="post-preview">
             <a href="{{ SITEURL }}/{{ article.url }}" rel="bookmark" title="Permalink to {{ article.title|striptags }}">
