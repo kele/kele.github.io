@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.62.0-DEV" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+
+
+  
+  
+    <title>Proxy server in Rust (part 2) &ndash; kele.codes</title>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/core.min.71e3c2285c89c144c3c50df26aef50433ced24085ff7ee5c7d74c4d929f17ead3576b8f545cf4e005db329d59503ea90.css" integrity="sha384-cePCKFyJwUTDxQ3yau9QQzztJAhf9&#43;5cfXTE2Snxfq01drj1Rc9OAF2zKdWVA&#43;qQ">
+<body>
+      <div class="base-body max-width"><section id="header" class="header max-body-width">
+  <p>
+    <a class="site-name" href="/">
+      
+        kele.codes
+      
+    </a>
+    
+  </p>
+</section><div id="content" class="flex-body max-body-width">
+  <section class="article-header">
+      <h1>Proxy server in Rust (part 2)</h1>
+      <p class="article-date"><span>2017-06-18</span>
+        
+        
+          
+          <a class="article-tag" href=/tags/rust/>rust</a>
+        
+          
+          <a class="article-tag" href=/tags/foxy/>foxy</a>
+        
+      </p>
+  </section>
+
+  <article class="markdown-body" >
+    <h2 id="lets-listen-over-tcp">Let's listen over TCP</h2>
+<p>This is how a draft of the main source file looks like (explanations below):</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#998;font-style:italic">// main.rs
+</span><span style="color:#998;font-style:italic"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>std::net;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">const</span><span style="color:#bbb"> </span>PROXY_PORT: <span style="color:#458;font-weight:bold">u16</span> <span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span><span style="color:#099">4000</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">main</span>()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>listener<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>net::TcpListener::bind((<span style="color:#d14">&#34;127.0.0.1&#34;</span>,<span style="color:#bbb"> </span>PROXY_PORT)).unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">match</span><span style="color:#bbb"> </span>listener.accept()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">        </span><span style="color:#0086b3">Ok</span>((sock,<span style="color:#bbb"> </span>_))<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>handle_connection(sock),<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">        </span><span style="color:#0086b3">Err</span>(e)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>panic<span style="color:#000;font-weight:bold">!</span>(<span style="color:#d14">&#34;Error while accepting connection: {}&#34;</span>,<span style="color:#bbb"> </span>e),<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">handle_connection</span>(tcp: <span style="color:#458;font-weight:bold">net</span>::TcpStream)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span>println<span style="color:#000;font-weight:bold">!</span>(<span style="color:#d14">&#34;Opened connection: {:?}&#34;</span>,<span style="color:#bbb"> </span>tcp)<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><h3 id="listening">Listening</h3>
+<p>We're going to use the <a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>
+<strong>crate</strong> (you can think of crates as libraries):</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>std::net;<span style="color:#bbb">
+</span></code></pre></div><p><a href="https://doc.rust-lang.org/std/net/struct.TcpListener.html"><code>std::net::TcpListener::bind</code></a>
+function is used here to start listening on port 4000 of the localhost.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#000;font-weight:bold">const</span><span style="color:#bbb"> </span>PROXY_PORT: <span style="color:#458;font-weight:bold">u16</span> <span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span><span style="color:#099">4000</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>listener<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>net::TcpListener::bind((<span style="color:#d14">&#34;127.0.0.1&#34;</span>,<span style="color:#bbb"> </span>PROXY_PORT)).unwrap();<span style="color:#bbb">
+</span></code></pre></div><p><code>u16</code> corresponds to <code>uint16</code> known from other languages, so <code>const PROXY_PORT: u16 = 4000;</code> is a definition of a <code>PROXY_PORT</code> constant 16-bit integer equal to
+4000.</p>
+<p>What about the mysterious <code>unwrap()</code> at the end? Rust is a language designed
+with safety with minimal runtime overhead in mind. How is this achieved in this
+case? <code>bind()</code> could've simply returned <code>TcpListener</code>, but instead it returns
+<a href="https://doc.rust-lang.org/std/io/type.Result.html"><code>std::io::Result&lt;TcpListener&gt;</code></a>.</p>
+<p>What's the difference?</p>
+<p>Something may go wrong while trying to bind the socket (i.e. the port can be
+already in use). This can be handled in many different ways (all with different
+trade-offs):</p>
+<ul>
+<li>throwing an exception (Java, C++?),</li>
+<li>returning a pointer (C, C++),</li>
+<li>returning two values <code>(TcpListener, bool)</code> (Go),</li>
+<li><a href="http://en.cppreference.com/w/cpp/utility/optional"><code>std::optional</code></a> (C++17).</li>
+</ul>
+<p>Throwing an exception does not make the programmer handle it. Returning a
+pointer or a <code>bool</code> value does not help here either. <code>std::optional</code> can be
+simply ignored using <code>*</code>. Rust tries to follow a different path. Instead of the
+abovementioned solutions, an object is returned in a wrapping (<code>Result</code>). This
+type can be one of the two: the expected value of type <code>TcpListener</code> or an error
+(<code>Error</code>)!</p>
+<p>Since binding a socket to a port is vital for this program to run, the only
+thing I do here is <code>unwrap()</code> the result.</p>
+<p>What does this method do? If there is no error - the value is returned. If an
+error happened, <a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panic!</code></a> is
+called (similar to <a href="https://blog.golang.org/defer-panic-and-recover"><code>panic</code></a>
+known from Go).</p>
+<h3 id="accepting-a-connection">Accepting a connection</h3>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#000;font-weight:bold">match</span><span style="color:#bbb"> </span>listener.accept()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span><span style="color:#0086b3">Ok</span>((sock,<span style="color:#bbb"> </span>_))<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>handle_connection(sock),<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span><span style="color:#0086b3">Err</span>(e)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>panic<span style="color:#000;font-weight:bold">!</span>(<span style="color:#d14">&#34;Error while accepting connection: {}&#34;</span>,<span style="color:#bbb"> </span>e),<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>If everything went smoothly, call <code>handle_connection(sock)</code> which will care take
+of the rest.</p>
+<p>If not, <code>panic!</code> with an appropriate error message.</p>
+<h3 id="pattern-matching-match">Pattern matching (<code>match</code>)</h3>
+<p><code>match</code> is a language construct used mostly in functional languages (like
+OCaml, Haskell, Lisp) rather than imperative ones (C, Python, Java, C++) and
+that's why I'd like to say a few words about it.</p>
+<p><a href="https://en.wikipedia.org/wiki/Pattern_matching"><strong>Pattern matching</strong></a> is used
+for:</p>
+<ul>
+<li>checking whether the object is what we think it is (in the above code, whether
+it's <code>Ok</code> (a value) or <code>Err</code> (an error))</li>
+<li>dissecting it (<code>Ok</code> is here made of two parts, the first one is the TCP
+socket, the second is the address; I'm ignoring the adress (using <code>_</code>), but
+binding the <code>sock</code> variable to the socket).</li>
+</ul>
+<p>For example, if we were to write a simple calculator based on trees of
+arithmetic expressions, a part of code might have looked like this:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#000;font-weight:bold">match</span><span style="color:#bbb"> </span>expression<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span>Add(x,<span style="color:#bbb"> </span>y)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>x<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">+</span><span style="color:#bbb"> </span>y,<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span>Sub(x,<span style="color:#bbb"> </span>y)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>x<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">-</span><span style="color:#bbb"> </span>y,<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span>Mul(x,<span style="color:#bbb"> </span>y)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>x<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">*</span><span style="color:#bbb"> </span>y,<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#bbb">    </span>Div(x,<span style="color:#bbb"> </span>y)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>x<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">/</span><span style="color:#bbb"> </span>y,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>This language construct is possible thanks to types that are an disjunction of
+different possible values. In this case it means that the expression can be i.e.
+an addition or substraction. The information about the kind of expression is
+stored and retrieved at runtime. What's important is the fact that the compiler
+can check whether we've covered all the possible kinds (and warn us if we forget
+about one).</p>
+<p>We could've simulated it in C++ in a following way:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cpp" data-lang="cpp"><span style="color:#000;font-weight:bold">enum</span> <span style="color:#458;font-weight:bold">Type</span> { Add, Sub, Mul, Div };
+
+<span style="color:#000;font-weight:bold">struct</span> <span style="color:#458;font-weight:bold">Expression</span> {
+    Type type;
+    <span style="color:#000;font-weight:bold">union</span> {
+        Add add;
+        Sub sub;
+        Mul mul;
+        Div div;
+    } expr;
+};
+
+<span style="color:#000;font-weight:bold">switch</span> expr.type {
+    <span style="color:#000;font-weight:bold">case</span> Type<span style="color:#000;font-weight:bold">:</span><span style="color:#000;font-weight:bold">:</span><span style="color:#900;font-weight:bold">Add</span>: <span style="color:#000;font-weight:bold">return</span> expr.add.x <span style="color:#000;font-weight:bold">+</span> expr.add.y; <span style="color:#000;font-weight:bold">break</span>;
+    <span style="color:#000;font-weight:bold">case</span> Type<span style="color:#000;font-weight:bold">:</span><span style="color:#000;font-weight:bold">:</span><span style="color:#900;font-weight:bold">Sub</span>: <span style="color:#000;font-weight:bold">return</span> expr.add.x <span style="color:#000;font-weight:bold">-</span> expr.add.y; <span style="color:#000;font-weight:bold">break</span>;
+    <span style="color:#000;font-weight:bold">case</span> Type<span style="color:#000;font-weight:bold">:</span><span style="color:#000;font-weight:bold">:</span><span style="color:#900;font-weight:bold">Mul</span>: <span style="color:#000;font-weight:bold">return</span> expr.add.x <span style="color:#000;font-weight:bold">*</span> expr.add.y; <span style="color:#000;font-weight:bold">break</span>;
+    <span style="color:#000;font-weight:bold">case</span> Type<span style="color:#000;font-weight:bold">:</span><span style="color:#000;font-weight:bold">:</span><span style="color:#900;font-weight:bold">Div</span>: <span style="color:#000;font-weight:bold">return</span> expr.add.x <span style="color:#000;font-weight:bold">/</span> expr.add.y; <span style="color:#000;font-weight:bold">break</span>;
+}
+</code></pre></div><p>As you can see, pattern matching is pretty convenient. In the languages that
+support it natively, the implementation is better than what I have shown here in
+C++. Unfortunately, I don't know enough about Rust to talk about its internals
+in this case.</p>
+<h3 id="panic"><code>panic!</code></h3>
+<p><code>panic!</code> is a macro (right now we can think of it as a function, but <code>!</code> in Rust
+is an indicator of a macro call) used for critical program errors.</p>
+<p><code>panic!</code> receives an argument list similar to <code>printf</code> known from other
+programming languages, and <code>{}</code> is used to print the values of any type (not
+exactly, more on that later).</p>
+<h2 id="whats-coming-up">What's coming up?</h2>
+<p>In the next posts I plan to talk about:</p>
+<ul>
+<li>handling HTTP requests in different threads</li>
+<li>ownership and borrowing (the main characteristic of Rust that differentiates
+it from popular modern programming languages)</li>
+<li>creating structures</li>
+<li>methods</li>
+<li>traits</li>
+<li>expressions and statements</li>
+<li>and many, many more.</li>
+</ul>
+
+  </article>
+
+  
+  
+
+  
+
+  
+    <section class="article-navigation">
+      <ul>
+        
+
+        
+          <li>
+            <a href="/2017/06/proxy-server-in-rust-part-1/">Proxy server in Rust (part 1)</a>
+            
+            
+                
+                <a class="article-tag" href=/tags/rust/>rust</a>
+            
+                
+                <a class="article-tag" href=/tags/foxy/>foxy</a>
+            
+          </li>
+        
+      </ul>
+    </section>
+  
+
+  
+
+
+        </div><section id="footer" class="footer max-body-width">
+  
+  
+    
+  
+  <p>kele.codes</p>
+  <p>
+    <span>Powered by</span>
+    <a href="https://gohugo.io">Hugo</a>
+    <span>and the</span>
+    <a href="https://themes.gohugo.io/hugo-notepadium/">Notepadium</a>
+  </p>
+</section>
+
+
+
+
+</div>
+    </body>
+</html>

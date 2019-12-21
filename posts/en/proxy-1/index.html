@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.62.0-DEV" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+
+
+  
+  
+    <title>Proxy server in Rust (part 1) &ndash; kele.codes</title>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/core.min.71e3c2285c89c144c3c50df26aef50433ced24085ff7ee5c7d74c4d929f17ead3576b8f545cf4e005db329d59503ea90.css" integrity="sha384-cePCKFyJwUTDxQ3yau9QQzztJAhf9&#43;5cfXTE2Snxfq01drj1Rc9OAF2zKdWVA&#43;qQ">
+<body>
+      <div class="base-body max-width"><section id="header" class="header max-body-width">
+  <p>
+    <a class="site-name" href="/">
+      
+        kele.codes
+      
+    </a>
+    
+  </p>
+</section><div id="content" class="flex-body max-body-width">
+  <section class="article-header">
+      <h1>Proxy server in Rust (part 1)</h1>
+      <p class="article-date"><span>2017-06-17</span>
+        
+        
+          
+          <a class="article-tag" href=/tags/rust/>rust</a>
+        
+          
+          <a class="article-tag" href=/tags/foxy/>foxy</a>
+        
+      </p>
+  </section>
+
+  <article class="markdown-body" >
+    <h1 id="what-this-is-all-about">What this is all about</h1>
+<h2 id="motivation">Motivation</h2>
+<p>I'm constantly distracting myself. Very often I visit sites like Hacker News or
+lobste.rs even though I don't have time to read the articles. As one can
+imagine, it doesn't help very much with being productive. I don't really have
+this problem when I'm busy and focused, but when I have 2-3 minutes to spare
+(because the project is building, my map-reduce is running or I'm waiting for a
+reply), my habit is to skim through every website that I find at least mildly
+interesting.</p>
+<p>I've tried different Chrome extensions, changes in <code>/etc/hosts</code> or blocking some
+domains on my home router, but none of these were flexible enough for me so I
+ended up working around them. This is where the idea of writing my own proxy
+server came from. The list of features should include:</p>
+<ul>
+<li>redirecting,</li>
+<li>time based blocking,</li>
+<li>delaying (if a site loads slowly, I tend to realize that I shouldn't be doing
+this),</li>
+<li>etc.</li>
+</ul>
+<h2 id="why-rust">Why Rust?</h2>
+<p>The language I used the most was always C++. At work I'm using mostly Go now.
+Although, the idea of having a strong compiler definitely speaks to me. That's
+why I wanted to learn Rust. Also, a proxy server seems to be a project easy
+enough that it won't distract me too much from learning the language itself, but
+hard enough to see whether I like Rust or not.</p>
+<h2 id="what-can-you-expect">What can you expect?</h2>
+<p>This is going to be a journal of my adventure with Rust. I have never ever used
+this language, so it's not going to be a tutorial of <strong>how to write good Rust</strong>,
+but I'm definitely going to try my best to learn as much as possible and share
+the knowledge. I have an idea what the borrow checking is about and I have some
+experience with rich type systems (Hindley-Milner from OCaml), so I hope I won't
+be lost completely. :)</p>
+<h1 id="preparations">Preparations</h1>
+<h2 id="compiler">Compiler</h2>
+<p>Instalation is very simple: <a href="https://rustup.rs/">rustup.rs</a>. Some of the Linux
+distros are going to have Rust in their repositories already.</p>
+<p>For convenience, most of the operations (creating projects, building, running)
+are done by using a tool called <code>cargo</code>&rsquo;. Please, do not forget to install it if
+you're not using rustup.rs.</p>
+<h2 id="documentation-and-other-learning-resources">Documentation and other learning resources</h2>
+<p>There are lots of good materials for learning Rust. The primary official
+document of the language and the standard library documentation can be both
+found at <a href="https://www.rust-lang.org/">rust-lang.org</a>.</p>
+<h2 id="my-programming-environment">My programming environment</h2>
+<p>VIM + <a href="https://github.com/phildawes/racer">Racer</a> +
+<a href="https://github.com/racer-rust/vim-racer">vim-racer</a>. Racer is an
+auto-completion tool for Rust.</p>
+<h2 id="creating-a-new-project">Creating a new project</h2>
+<pre><code>::bash
+cargo new --bin project
+</code></pre>
+<p>This command creates a template of an executable  (<code>--bin</code>) named <code>project</code>.
+What's interestinghere is that the project is going to be created under Git
+versioning control system by default (nice gesture ;)).</p>
+<p><code>cargo build</code> builds the project. The default template is the well known <strong>Hello
+World</strong>.</p>
+<h1 id="the-end-of-the-first-post">The end of the first post</h1>
+<p>It's all for today. In the next post there will be some code, I promise! :)</p>
+<h1 id="other-parts">Other parts</h1>
+<ul>
+<li><a href="proxy-server-in-rust-part-2.html">next post (part 2)</a></li>
+</ul>
+
+  </article>
+
+  
+  
+
+  
+
+  
+
+  
+
+
+        </div><section id="footer" class="footer max-body-width">
+  
+  
+    
+  
+  <p>kele.codes</p>
+  <p>
+    <span>Powered by</span>
+    <a href="https://gohugo.io">Hugo</a>
+    <span>and the</span>
+    <a href="https://themes.gohugo.io/hugo-notepadium/">Notepadium</a>
+  </p>
+</section>
+
+
+
+
+</div>
+    </body>
+</html>

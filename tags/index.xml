@@ -6,9 +6,28 @@
     <description>Recent content in Tags on kele.codes</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
+    <lastBuildDate>Sun, 18 Jun 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://kele.codes/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>foxy</title>
+      <link>http://kele.codes/tags/foxy/</link>
+      <pubDate>Sun, 18 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://kele.codes/tags/foxy/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>rust</title>
+      <link>http://kele.codes/tags/rust/</link>
+      <pubDate>Sun, 18 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://kele.codes/tags/rust/</guid>
+      <description></description>
+    </item>
     
   </channel>
 </rss>

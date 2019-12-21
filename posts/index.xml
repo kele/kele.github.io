@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>kele.codes</title>
-    <link>http://kele.codes/</link>
-    <description>Recent content on kele.codes</description>
+    <title>Posts on kele.codes</title>
+    <link>http://kele.codes/posts/</link>
+    <description>Recent content in Posts on kele.codes</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 18 Jun 2017 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="http://kele.codes/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://kele.codes/posts/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
