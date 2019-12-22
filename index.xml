@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>kele.codes</title>
@@ -8,25 +8,16 @@
     <language>en-us</language>
     <lastBuildDate>Sun, 18 Jun 2017 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="http://kele.codes/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="http://kele.codes/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Proxy server in Rust (part 2)</title>
-      <link>http://kele.codes/2017/06/proxy-server-in-rust-part-2/</link>
+      <title>Posts</title>
+      <link>http://kele.codes/posts/</link>
       <pubDate>Sun, 18 Jun 2017 00:00:00 +0000</pubDate>
       
-      <guid>http://kele.codes/2017/06/proxy-server-in-rust-part-2/</guid>
-      <description>First draft and the basics of Rust.</description>
-    </item>
-    
-    <item>
-      <title>Proxy server in Rust (part 1)</title>
-      <link>http://kele.codes/2017/06/proxy-server-in-rust-part-1/</link>
-      <pubDate>Sat, 17 Jun 2017 00:00:00 +0000</pubDate>
-      
-      <guid>http://kele.codes/2017/06/proxy-server-in-rust-part-1/</guid>
-      <description>Writing a simple proxy server in Rust to address my bad productivity habits.</description>
+      <guid>http://kele.codes/posts/</guid>
+      <description></description>
     </item>
     
   </channel>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on kele.codes</title>
@@ -8,7 +8,7 @@
     <language>en-us</language>
     <lastBuildDate>Sun, 18 Jun 2017 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="http://kele.codes/posts/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="http://kele.codes/posts/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -17,7 +17,139 @@
       <pubDate>Sun, 18 Jun 2017 00:00:00 +0000</pubDate>
       
       <guid>http://kele.codes/2017/06/proxy-server-in-rust-part-2/</guid>
-      <description>First draft and the basics of Rust.</description>
+      <description>&lt;h2 id=&#34;lets-listen-over-tcp&#34;&gt;Let&#39;s listen over TCP&lt;/h2&gt;
+&lt;p&gt;This is how a draft of the main source file looks like (explanations below):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#998;font-style:italic&#34;&gt;// main.rs
+&lt;/span&gt;&lt;span style=&#34;color:#998;font-style:italic&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;use&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;std::net;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;const&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;PROXY_PORT: &lt;span style=&#34;color:#458;font-weight:bold&#34;&gt;u16&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#099&#34;&gt;4000&lt;/span&gt;;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;fn&lt;/span&gt; &lt;span style=&#34;color:#900;font-weight:bold&#34;&gt;main&lt;/span&gt;()&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;{&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;let&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;listener&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;net::TcpListener::bind((&lt;span style=&#34;color:#d14&#34;&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;PROXY_PORT)).unwrap();&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;match&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;listener.accept()&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;{&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#0086b3&#34;&gt;Ok&lt;/span&gt;((sock,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;_))&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;handle_connection(sock),&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#0086b3&#34;&gt;Err&lt;/span&gt;(e)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;panic&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color:#d14&#34;&gt;&amp;#34;Error while accepting connection: {}&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;e),&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;}&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;fn&lt;/span&gt; &lt;span style=&#34;color:#900;font-weight:bold&#34;&gt;handle_connection&lt;/span&gt;(tcp: &lt;span style=&#34;color:#458;font-weight:bold&#34;&gt;net&lt;/span&gt;::TcpStream)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;{&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;println&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color:#d14&#34;&gt;&amp;#34;Opened connection: {:?}&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;tcp)&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;listening&#34;&gt;Listening&lt;/h3&gt;
+&lt;p&gt;We&#39;re going to use the &lt;a href=&#34;https://doc.rust-lang.org/std/net/&#34;&gt;&lt;code&gt;std::net&lt;/code&gt;&lt;/a&gt;
+&lt;strong&gt;crate&lt;/strong&gt; (you can think of crates as libraries):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;use&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;std::net;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;a href=&#34;https://doc.rust-lang.org/std/net/struct.TcpListener.html&#34;&gt;&lt;code&gt;std::net::TcpListener::bind&lt;/code&gt;&lt;/a&gt;
+function is used here to start listening on port 4000 of the localhost.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;const&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;PROXY_PORT: &lt;span style=&#34;color:#458;font-weight:bold&#34;&gt;u16&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#099&#34;&gt;4000&lt;/span&gt;;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;let&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;listener&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;net::TcpListener::bind((&lt;span style=&#34;color:#d14&#34;&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;PROXY_PORT)).unwrap();&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;u16&lt;/code&gt; corresponds to &lt;code&gt;uint16&lt;/code&gt; known from other languages, so &lt;code&gt;const PROXY_PORT: u16 = 4000;&lt;/code&gt; is a definition of a &lt;code&gt;PROXY_PORT&lt;/code&gt; constant 16-bit integer equal to
+4000.&lt;/p&gt;
+&lt;p&gt;What about the mysterious &lt;code&gt;unwrap()&lt;/code&gt; at the end? Rust is a language designed
+with safety with minimal runtime overhead in mind. How is this achieved in this
+case? &lt;code&gt;bind()&lt;/code&gt; could&#39;ve simply returned &lt;code&gt;TcpListener&lt;/code&gt;, but instead it returns
+&lt;a href=&#34;https://doc.rust-lang.org/std/io/type.Result.html&#34;&gt;&lt;code&gt;std::io::Result&amp;lt;TcpListener&amp;gt;&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;What&#39;s the difference?&lt;/p&gt;
+&lt;p&gt;Something may go wrong while trying to bind the socket (i.e. the port can be
+already in use). This can be handled in many different ways (all with different
+trade-offs):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;throwing an exception (Java, C++?),&lt;/li&gt;
+&lt;li&gt;returning a pointer (C, C++),&lt;/li&gt;
+&lt;li&gt;returning two values &lt;code&gt;(TcpListener, bool)&lt;/code&gt; (Go),&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://en.cppreference.com/w/cpp/utility/optional&#34;&gt;&lt;code&gt;std::optional&lt;/code&gt;&lt;/a&gt; (C++17).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Throwing an exception does not make the programmer handle it. Returning a
+pointer or a &lt;code&gt;bool&lt;/code&gt; value does not help here either. &lt;code&gt;std::optional&lt;/code&gt; can be
+simply ignored using &lt;code&gt;*&lt;/code&gt;. Rust tries to follow a different path. Instead of the
+abovementioned solutions, an object is returned in a wrapping (&lt;code&gt;Result&lt;/code&gt;). This
+type can be one of the two: the expected value of type &lt;code&gt;TcpListener&lt;/code&gt; or an error
+(&lt;code&gt;Error&lt;/code&gt;)!&lt;/p&gt;
+&lt;p&gt;Since binding a socket to a port is vital for this program to run, the only
+thing I do here is &lt;code&gt;unwrap()&lt;/code&gt; the result.&lt;/p&gt;
+&lt;p&gt;What does this method do? If there is no error - the value is returned. If an
+error happened, &lt;a href=&#34;https://doc.rust-lang.org/std/macro.panic.html&#34;&gt;&lt;code&gt;panic!&lt;/code&gt;&lt;/a&gt; is
+called (similar to &lt;a href=&#34;https://blog.golang.org/defer-panic-and-recover&#34;&gt;&lt;code&gt;panic&lt;/code&gt;&lt;/a&gt;
+known from Go).&lt;/p&gt;
+&lt;h3 id=&#34;accepting-a-connection&#34;&gt;Accepting a connection&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;match&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;listener.accept()&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;{&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#0086b3&#34;&gt;Ok&lt;/span&gt;((sock,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;_))&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;handle_connection(sock),&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#0086b3&#34;&gt;Err&lt;/span&gt;(e)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;panic&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color:#d14&#34;&gt;&amp;#34;Error while accepting connection: {}&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;e),&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If everything went smoothly, call &lt;code&gt;handle_connection(sock)&lt;/code&gt; which will care take
+of the rest.&lt;/p&gt;
+&lt;p&gt;If not, &lt;code&gt;panic!&lt;/code&gt; with an appropriate error message.&lt;/p&gt;
+&lt;h3 id=&#34;pattern-matching-match&#34;&gt;Pattern matching (&lt;code&gt;match&lt;/code&gt;)&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;match&lt;/code&gt; is a language construct used mostly in functional languages (like
+OCaml, Haskell, Lisp) rather than imperative ones (C, Python, Java, C++) and
+that&#39;s why I&#39;d like to say a few words about it.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Pattern_matching&#34;&gt;&lt;strong&gt;Pattern matching&lt;/strong&gt;&lt;/a&gt; is used
+for:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;checking whether the object is what we think it is (in the above code, whether
+it&#39;s &lt;code&gt;Ok&lt;/code&gt; (a value) or &lt;code&gt;Err&lt;/code&gt; (an error))&lt;/li&gt;
+&lt;li&gt;dissecting it (&lt;code&gt;Ok&lt;/code&gt; is here made of two parts, the first one is the TCP
+socket, the second is the address; I&#39;m ignoring the adress (using &lt;code&gt;_&lt;/code&gt;), but
+binding the &lt;code&gt;sock&lt;/code&gt; variable to the socket).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For example, if we were to write a simple calculator based on trees of
+arithmetic expressions, a part of code might have looked like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;match&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;expression&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;{&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;Add(x,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;x&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y,&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;Sub(x,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;x&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y,&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;Mul(x,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;x&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y,&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;Div(x,&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y)&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;x&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;y,&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This language construct is possible thanks to types that are an disjunction of
+different possible values. In this case it means that the expression can be i.e.
+an addition or substraction. The information about the kind of expression is
+stored and retrieved at runtime. What&#39;s important is the fact that the compiler
+can check whether we&#39;ve covered all the possible kinds (and warn us if we forget
+about one).&lt;/p&gt;
+&lt;p&gt;We could&#39;ve simulated it in C++ in a following way:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;enum&lt;/span&gt; &lt;span style=&#34;color:#458;font-weight:bold&#34;&gt;Type&lt;/span&gt; { Add, Sub, Mul, Div };
+
+&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color:#458;font-weight:bold&#34;&gt;Expression&lt;/span&gt; {
+    Type type;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;union&lt;/span&gt; {
+        Add add;
+        Sub sub;
+        Mul mul;
+        Div div;
+    } expr;
+};
+
+&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;switch&lt;/span&gt; expr.type {
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#900;font-weight:bold&#34;&gt;Add&lt;/span&gt;: &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;+&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#900;font-weight:bold&#34;&gt;Sub&lt;/span&gt;: &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;-&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#900;font-weight:bold&#34;&gt;Mul&lt;/span&gt;: &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;*&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#900;font-weight:bold&#34;&gt;Div&lt;/span&gt;: &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;/&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, pattern matching is pretty convenient. In the languages that
+support it natively, the implementation is better than what I have shown here in
+C++. Unfortunately, I don&#39;t know enough about Rust to talk about its internals
+in this case.&lt;/p&gt;
+&lt;h3 id=&#34;panic&#34;&gt;&lt;code&gt;panic!&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;panic!&lt;/code&gt; is a macro (right now we can think of it as a function, but &lt;code&gt;!&lt;/code&gt; in Rust
+is an indicator of a macro call) used for critical program errors.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;panic!&lt;/code&gt; receives an argument list similar to &lt;code&gt;printf&lt;/code&gt; known from other
+programming languages, and &lt;code&gt;{}&lt;/code&gt; is used to print the values of any type (not
+exactly, more on that later).&lt;/p&gt;
+&lt;h2 id=&#34;whats-coming-up&#34;&gt;What&#39;s coming up?&lt;/h2&gt;
+&lt;p&gt;In the next posts I plan to talk about:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;handling HTTP requests in different threads&lt;/li&gt;
+&lt;li&gt;ownership and borrowing (the main characteristic of Rust that differentiates
+it from popular modern programming languages)&lt;/li&gt;
+&lt;li&gt;creating structures&lt;/li&gt;
+&lt;li&gt;methods&lt;/li&gt;
+&lt;li&gt;traits&lt;/li&gt;
+&lt;li&gt;expressions and statements&lt;/li&gt;
+&lt;li&gt;and many, many more.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
     </item>
     
     <item>
@@ -26,7 +158,64 @@
       <pubDate>Sat, 17 Jun 2017 00:00:00 +0000</pubDate>
       
       <guid>http://kele.codes/2017/06/proxy-server-in-rust-part-1/</guid>
-      <description>Writing a simple proxy server in Rust to address my bad productivity habits.</description>
+      <description>&lt;h1 id=&#34;what-this-is-all-about&#34;&gt;What this is all about&lt;/h1&gt;
+&lt;h2 id=&#34;motivation&#34;&gt;Motivation&lt;/h2&gt;
+&lt;p&gt;I&#39;m constantly distracting myself. Very often I visit sites like Hacker News or
+lobste.rs even though I don&#39;t have time to read the articles. As one can
+imagine, it doesn&#39;t help very much with being productive. I don&#39;t really have
+this problem when I&#39;m busy and focused, but when I have 2-3 minutes to spare
+(because the project is building, my map-reduce is running or I&#39;m waiting for a
+reply), my habit is to skim through every website that I find at least mildly
+interesting.&lt;/p&gt;
+&lt;p&gt;I&#39;ve tried different Chrome extensions, changes in &lt;code&gt;/etc/hosts&lt;/code&gt; or blocking some
+domains on my home router, but none of these were flexible enough for me so I
+ended up working around them. This is where the idea of writing my own proxy
+server came from. The list of features should include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;redirecting,&lt;/li&gt;
+&lt;li&gt;time based blocking,&lt;/li&gt;
+&lt;li&gt;delaying (if a site loads slowly, I tend to realize that I shouldn&#39;t be doing
+this),&lt;/li&gt;
+&lt;li&gt;etc.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;why-rust&#34;&gt;Why Rust?&lt;/h2&gt;
+&lt;p&gt;The language I used the most was always C++. At work I&#39;m using mostly Go now.
+Although, the idea of having a strong compiler definitely speaks to me. That&#39;s
+why I wanted to learn Rust. Also, a proxy server seems to be a project easy
+enough that it won&#39;t distract me too much from learning the language itself, but
+hard enough to see whether I like Rust or not.&lt;/p&gt;
+&lt;h2 id=&#34;what-can-you-expect&#34;&gt;What can you expect?&lt;/h2&gt;
+&lt;p&gt;This is going to be a journal of my adventure with Rust. I have never ever used
+this language, so it&#39;s not going to be a tutorial of &lt;strong&gt;how to write good Rust&lt;/strong&gt;,
+but I&#39;m definitely going to try my best to learn as much as possible and share
+the knowledge. I have an idea what the borrow checking is about and I have some
+experience with rich type systems (Hindley-Milner from OCaml), so I hope I won&#39;t
+be lost completely. :)&lt;/p&gt;
+&lt;h1 id=&#34;preparations&#34;&gt;Preparations&lt;/h1&gt;
+&lt;h2 id=&#34;compiler&#34;&gt;Compiler&lt;/h2&gt;
+&lt;p&gt;Instalation is very simple: &lt;a href=&#34;https://rustup.rs/&#34;&gt;rustup.rs&lt;/a&gt;. Some of the Linux
+distros are going to have Rust in their repositories already.&lt;/p&gt;
+&lt;p&gt;For convenience, most of the operations (creating projects, building, running)
+are done by using a tool called &lt;code&gt;cargo&lt;/code&gt;&amp;rsquo;. Please, do not forget to install it if
+you&#39;re not using rustup.rs.&lt;/p&gt;
+&lt;h2 id=&#34;documentation-and-other-learning-resources&#34;&gt;Documentation and other learning resources&lt;/h2&gt;
+&lt;p&gt;There are lots of good materials for learning Rust. The primary official
+document of the language and the standard library documentation can be both
+found at &lt;a href=&#34;https://www.rust-lang.org/&#34;&gt;rust-lang.org&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;my-programming-environment&#34;&gt;My programming environment&lt;/h2&gt;
+&lt;p&gt;VIM + &lt;a href=&#34;https://github.com/phildawes/racer&#34;&gt;Racer&lt;/a&gt; +
+&lt;a href=&#34;https://github.com/racer-rust/vim-racer&#34;&gt;vim-racer&lt;/a&gt;. Racer is an
+auto-completion tool for Rust.&lt;/p&gt;
+&lt;h2 id=&#34;creating-a-new-project&#34;&gt;Creating a new project&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;cargo new --bin project
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This command creates a template of an executable  (&lt;code&gt;--bin&lt;/code&gt;) named &lt;code&gt;project&lt;/code&gt;.
+What&#39;s interestinghere is that the project is going to be created under Git
+versioning control system by default (nice gesture ;)).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cargo build&lt;/code&gt; builds the project. The default template is the well known &lt;strong&gt;Hello
+World&lt;/strong&gt;.&lt;/p&gt;
+&lt;h1 id=&#34;the-end-of-the-first-post&#34;&gt;The end of the first post&lt;/h1&gt;
+&lt;p&gt;It&#39;s all for today. In the next post there will be some code, I promise! :)&lt;/p&gt;
+</description>
     </item>
     
   </channel>
