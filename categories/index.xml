@@ -2,12 +2,12 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on kele.codes</title>
-    <link>http://kele.codes/categories/</link>
+    <link>https://kele.codes/categories/</link>
     <description>Recent content in Categories on kele.codes</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     
-        <atom:link href="http://kele.codes/categories/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="https://kele.codes/categories/index.xml" rel="self" type="application/rss+xml" />
     
     
   </channel>

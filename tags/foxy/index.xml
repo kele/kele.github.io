@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>foxy on kele.codes</title>
-    <link>http://kele.codes/tags/foxy/</link>
+    <link>https://kele.codes/tags/foxy/</link>
     <description>Recent content in foxy on kele.codes</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 18 Jun 2017 00:00:00 +0000</lastBuildDate>
     
-        <atom:link href="http://kele.codes/tags/foxy/index.xml" rel="self" type="application/rss+xml" />
+        <atom:link href="https://kele.codes/tags/foxy/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Proxy server in Rust (part 2)</title>
-      <link>http://kele.codes/2017/06/proxy-server-in-rust-part-2/</link>
+      <link>https://kele.codes/2017/06/proxy-server-in-rust-part-2/</link>
       <pubDate>Sun, 18 Jun 2017 00:00:00 +0000</pubDate>
       
-      <guid>http://kele.codes/2017/06/proxy-server-in-rust-part-2/</guid>
+      <guid>https://kele.codes/2017/06/proxy-server-in-rust-part-2/</guid>
       <description>&lt;h2 id=&#34;lets-listen-over-tcp&#34;&gt;Let&amp;rsquo;s listen over TCP&lt;/h2&gt;
 &lt;p&gt;This is how a draft of the main source file looks like (explanations below):&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// main.rs
@@ -154,10 +154,10 @@ it from popular modern programming languages)&lt;/li&gt;
     
     <item>
       <title>Proxy server in Rust (part 1)</title>
-      <link>http://kele.codes/2017/06/proxy-server-in-rust-part-1/</link>
+      <link>https://kele.codes/2017/06/proxy-server-in-rust-part-1/</link>
       <pubDate>Sat, 17 Jun 2017 00:00:00 +0000</pubDate>
       
-      <guid>http://kele.codes/2017/06/proxy-server-in-rust-part-1/</guid>
+      <guid>https://kele.codes/2017/06/proxy-server-in-rust-part-1/</guid>
       <description>&lt;h1 id=&#34;what-this-is-all-about&#34;&gt;What this is all about&lt;/h1&gt;
 &lt;h2 id=&#34;motivation&#34;&gt;Motivation&lt;/h2&gt;
 &lt;p&gt;I&amp;rsquo;m constantly distracting myself. Very often I visit sites like Hacker News or
