@@ -19,32 +19,32 @@
       <guid>https://kele.codes/2017/06/proxy-server-in-rust-part-2/</guid>
       <description>&lt;h2 id=&#34;lets-listen-over-tcp&#34;&gt;Let&amp;rsquo;s listen over TCP&lt;/h2&gt;
 &lt;p&gt;This is how a draft of the main source file looks like (explanations below):&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// main.rs
-&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
-&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; std::net;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;font-style:italic&#34;&gt;// main.rs
+&lt;/span&gt;&lt;span style=&#34;font-style:italic&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;font-weight:bold&#34;&gt;use&lt;/span&gt; std::net;
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; PROXY_PORT: &lt;span style=&#34;color:#66d9ef&#34;&gt;u16&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4000&lt;/span&gt;;
+&lt;span style=&#34;font-weight:bold&#34;&gt;const&lt;/span&gt; PROXY_PORT: &lt;span style=&#34;&#34;&gt;u16&lt;/span&gt; = 4000;
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;fn&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; listener &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; net::TcpListener::bind((&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;, PROXY_PORT)).unwrap();
+&lt;span style=&#34;font-weight:bold&#34;&gt;fn&lt;/span&gt; main() {
+    &lt;span style=&#34;font-weight:bold&#34;&gt;let&lt;/span&gt; listener = net::TcpListener::bind((&lt;span style=&#34;font-style:italic&#34;&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;, PROXY_PORT)).unwrap();
 
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;match&lt;/span&gt; listener.accept() {
-        Ok((sock, _)) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; handle_connection(sock),
-        Err(e) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; panic&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error while accepting connection: {}&amp;#34;&lt;/span&gt;, e),
+    &lt;span style=&#34;font-weight:bold&#34;&gt;match&lt;/span&gt; listener.accept() {
+        Ok((sock, _)) =&amp;gt; handle_connection(sock),
+        Err(e) =&amp;gt; panic!(&lt;span style=&#34;font-style:italic&#34;&gt;&amp;#34;Error while accepting connection: {}&amp;#34;&lt;/span&gt;, e),
     }
 }
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;fn&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;handle_connection&lt;/span&gt;(tcp: &lt;span style=&#34;color:#a6e22e&#34;&gt;net&lt;/span&gt;::TcpStream) {
-    println&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Opened connection: {:?}&amp;#34;&lt;/span&gt;, tcp)
+&lt;span style=&#34;font-weight:bold&#34;&gt;fn&lt;/span&gt; handle_connection(tcp: &lt;span style=&#34;font-weight:bold&#34;&gt;net&lt;/span&gt;::TcpStream) {
+    println!(&lt;span style=&#34;font-style:italic&#34;&gt;&amp;#34;Opened connection: {:?}&amp;#34;&lt;/span&gt;, tcp)
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;listening&#34;&gt;Listening&lt;/h3&gt;
 &lt;p&gt;We&amp;rsquo;re going to use the &lt;a href=&#34;https://doc.rust-lang.org/std/net/&#34;&gt;&lt;code&gt;std::net&lt;/code&gt;&lt;/a&gt;
 &lt;strong&gt;crate&lt;/strong&gt; (you can think of crates as libraries):&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; std::net;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;use&lt;/span&gt; std::net;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;a href=&#34;https://doc.rust-lang.org/std/net/struct.TcpListener.html&#34;&gt;&lt;code&gt;std::net::TcpListener::bind&lt;/code&gt;&lt;/a&gt;
 function is used here to start listening on port 4000 of the localhost.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; PROXY_PORT: &lt;span style=&#34;color:#66d9ef&#34;&gt;u16&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4000&lt;/span&gt;;
-&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; listener &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; net::TcpListener::bind((&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;, PROXY_PORT)).unwrap();
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;const&lt;/span&gt; PROXY_PORT: &lt;span style=&#34;&#34;&gt;u16&lt;/span&gt; = 4000;
+&lt;span style=&#34;font-weight:bold&#34;&gt;let&lt;/span&gt; listener = net::TcpListener::bind((&lt;span style=&#34;font-style:italic&#34;&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;, PROXY_PORT)).unwrap();
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;u16&lt;/code&gt; corresponds to &lt;code&gt;uint16&lt;/code&gt; known from other languages, so &lt;code&gt;const PROXY_PORT: u16 = 4000;&lt;/code&gt; is a definition of a &lt;code&gt;PROXY_PORT&lt;/code&gt; constant 16-bit integer equal to
 4000.&lt;/p&gt;
 &lt;p&gt;What about the mysterious &lt;code&gt;unwrap()&lt;/code&gt; at the end? Rust is a language designed
@@ -74,9 +74,9 @@ error happened, &lt;a href=&#34;https://doc.rust-lang.org/std/macro.panic.html&#
 called (similar to &lt;a href=&#34;https://blog.golang.org/defer-panic-and-recover&#34;&gt;&lt;code&gt;panic&lt;/code&gt;&lt;/a&gt;
 known from Go).&lt;/p&gt;
 &lt;h3 id=&#34;accepting-a-connection&#34;&gt;Accepting a connection&lt;/h3&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;match&lt;/span&gt; listener.accept() {
-    Ok((sock, _)) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; handle_connection(sock),
-    Err(e) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; panic&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error while accepting connection: {}&amp;#34;&lt;/span&gt;, e),
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;match&lt;/span&gt; listener.accept() {
+    Ok((sock, _)) =&amp;gt; handle_connection(sock),
+    Err(e) =&amp;gt; panic!(&lt;span style=&#34;font-style:italic&#34;&gt;&amp;#34;Error while accepting connection: {}&amp;#34;&lt;/span&gt;, e),
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If everything went smoothly, call &lt;code&gt;handle_connection(sock)&lt;/code&gt; which will care take
 of the rest.&lt;/p&gt;
@@ -96,11 +96,11 @@ binding the &lt;code&gt;sock&lt;/code&gt; variable to the socket).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;For example, if we were to write a simple calculator based on trees of
 arithmetic expressions, a part of code might have looked like this:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;match&lt;/span&gt; expression {
-    Add(x, y) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; y,
-    Sub(x, y) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; y,
-    Mul(x, y) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; y,
-    Div(x, y) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; y,
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-rust&#34; data-lang=&#34;rust&#34;&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;match&lt;/span&gt; expression {
+    Add(x, y) =&amp;gt; x + y,
+    Sub(x, y) =&amp;gt; x - y,
+    Mul(x, y) =&amp;gt; x * y,
+    Div(x, y) =&amp;gt; x / y,
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This language construct is possible thanks to types that are an disjunction of
 different possible values. In this case it means that the expression can be i.e.
@@ -109,11 +109,11 @@ stored and retrieved at runtime. What&amp;rsquo;s important is the fact that the
 can check whether we&amp;rsquo;ve covered all the possible kinds (and warn us if we forget
 about one).&lt;/p&gt;
 &lt;p&gt;We could&amp;rsquo;ve simulated it in C++ in a following way:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;enum&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Type&lt;/span&gt; { Add, Sub, Mul, Div };
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;enum&lt;/span&gt; &lt;span style=&#34;font-weight:bold&#34;&gt;Type&lt;/span&gt; { Add, Sub, Mul, Div };
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Expression&lt;/span&gt; {
+&lt;span style=&#34;font-weight:bold&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;font-weight:bold&#34;&gt;Expression&lt;/span&gt; {
     Type type;
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;union&lt;/span&gt; {
+    &lt;span style=&#34;font-weight:bold&#34;&gt;union&lt;/span&gt; {
         Add add;
         Sub sub;
         Mul mul;
@@ -121,11 +121,11 @@ about one).&lt;/p&gt;
     } expr;
 };
 
-&lt;span style=&#34;color:#66d9ef&#34;&gt;switch&lt;/span&gt; expr.type {
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Add: &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Sub: &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Mul: &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
-    &lt;span style=&#34;color:#66d9ef&#34;&gt;case&lt;/span&gt; Type&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Div: &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; expr.add.x &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; expr.add.y; &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
+&lt;span style=&#34;font-weight:bold&#34;&gt;switch&lt;/span&gt; expr.type {
+    &lt;span style=&#34;font-weight:bold&#34;&gt;case&lt;/span&gt; Type::Add: &lt;span style=&#34;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x + expr.add.y; &lt;span style=&#34;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+    &lt;span style=&#34;font-weight:bold&#34;&gt;case&lt;/span&gt; Type::Sub: &lt;span style=&#34;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x - expr.add.y; &lt;span style=&#34;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+    &lt;span style=&#34;font-weight:bold&#34;&gt;case&lt;/span&gt; Type::Mul: &lt;span style=&#34;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x * expr.add.y; &lt;span style=&#34;font-weight:bold&#34;&gt;break&lt;/span&gt;;
+    &lt;span style=&#34;font-weight:bold&#34;&gt;case&lt;/span&gt; Type::Div: &lt;span style=&#34;font-weight:bold&#34;&gt;return&lt;/span&gt; expr.add.x / expr.add.y; &lt;span style=&#34;font-weight:bold&#34;&gt;break&lt;/span&gt;;
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, pattern matching is pretty convenient. In the languages that
 support it natively, the implementation is better than what I have shown here in
@@ -207,7 +207,7 @@ found at &lt;a href=&#34;https://www.rust-lang.org/&#34;&gt;rust-lang.org&lt;/a&
 &lt;a href=&#34;https://github.com/racer-rust/vim-racer&#34;&gt;vim-racer&lt;/a&gt;. Racer is an
 auto-completion tool for Rust.&lt;/p&gt;
 &lt;h2 id=&#34;creating-a-new-project&#34;&gt;Creating a new project&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;cargo new --bin project
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;cargo new --bin project
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This command creates a template of an executable  (&lt;code&gt;--bin&lt;/code&gt;) named &lt;code&gt;project&lt;/code&gt;.
 What&amp;rsquo;s interestinghere is that the project is going to be created under Git
 versioning control system by default (nice gesture ;)).&lt;/p&gt;
