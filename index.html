@@ -1,306 +1,164 @@
 <!DOCTYPE html>
 <html lang="en-us">
-
 <head>
+	<meta name="generator" content="Hugo 0.68.3" />
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
   <meta charset="utf-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-  
-    
-  
-
-
-
-
-
-
-
-
-<meta name="generator" content="Hugo 0.68.3" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>kele.codes</title>
-  <link rel="canonical" href="/">
+  <link rel = 'canonical' href = 'https://kele.codes/'>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="kele.codes" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://kele.codes/" />
+<meta property="og:updated_time" content="2020-09-03T20:18:48+02:00" />
 
-
-  <link rel="alternate" type="application/rss+xml" href="/index.xml" title="kele.codes">
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="kele.codes"/>
+<meta name="twitter:description" content=""/>
 
   
-
-
-
-
-
-
-
-
-  
-
-  
-
-  
-
   
     
-    
-    
-    
-    
+  
+  
+  <link rel="stylesheet" href="https://kele.codes/css/styles.c05d68261bf086a9d7713c4f8a6215a3601608e267a816a7ee58f139b3d1aae51222aae2081c8e0c6bd35e1334773b7a16283022f31f92afd93bb37e5e822e66.css" integrity="sha512-wF1oJhvwhqnXcTxPimIVo2AWCOJnqBan7ljxObPRquUSIqriCByODGvTXhM0dzt6FigwIvMfkq/ZO7N&#43;XoIuZg=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
   
 
   
-
+<link rel="icon" type="image/png" href="https://kele.codes/images/favicon.ico" />
 
   
-  <link rel="stylesheet" href="/css/base.min.1c761613ed8ad6700cc9893af0315bd45c121ca96098083d5ed163ab1f6052bc.css" integrity="sha256-HHYWE&#43;2K1nAMyYk68DFb1FwSHKlgmAg9XtFjqx9gUrw=" crossorigin="anonymous">
-
-
-
+  
+    <link href="https://kele.codes/index.xml" rel="alternate" type="application/rss+xml" title="kele.codes" />
+  
+  
+  
 </head>
 
-<body>
-  <nav class="u-background">
-  <div class="u-wrapper">
-    <ul class="Banner">
-      <li class="Banner-item Banner-item--title">
-        <a class="Banner-link u-clickable" href="/">kele.codes</a>
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+    <header id="header">
+  <a href="https://kele.codes/">
+  
+    <div id="logo" style="background-image: url(https://kele.codes/images/logo.png)"></div>
+  
+  <div id="title">
+    <h1>kele.codes</h1>
+  </div>
+  </a>
+  <div id="nav">
+    <ul>
+      <li class="icon">
+        <a href="#" aria-label="Menu"><i class="fas fa-bars fa-2x" aria-hidden="true"></i></a>
       </li>
       
-        <li class="Banner-item">
-          <a class="Banner-link u-clickable" href="/about/">About</a>
-        </li>
+        <li><a href="/">Home</a></li>
       
-        <li class="Banner-item">
-          <a class="Banner-link u-clickable" href="/posts/">Posts</a>
-        </li>
-      
-        <li class="Banner-item">
-          <a class="Banner-link u-clickable" href="https://twitter.com/kele_codes">Twitter</a>
-        </li>
-      
-        <li class="Banner-item">
-          <a class="Banner-link u-clickable" href="/index.html">RSS</a>
-        </li>
+        <li><a href="/about">About</a></li>
       
     </ul>
   </div>
-</nav>
-  <main>
-    <div class="u-wrapper">
-      <div class="u-padding">
-        
-
-  
-
-  
-    <article>
-      <header class="Heading">
-  <h2 class="Heading-title">
-    <a class="Heading-link u-clickable" href="/2017/06/proxy-server-in-rust-part-2/" rel="bookmark">Proxy server in Rust (part 2)</a>
-  </h2>
-  
-    <time datetime="2017-06-18T00:00:00Z">18 June, 2017</time>
-  
 </header>
-      
-        <h2 id="lets-listen-over-tcp">Let&rsquo;s listen over TCP</h2>
-<p>This is how a draft of the main source file looks like (explanations below):</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="font-style:italic">// main.rs
-</span><span style="font-style:italic"></span>
-<span style="font-weight:bold">use</span> std::net;
 
-<span style="font-weight:bold">const</span> PROXY_PORT: <span style="">u16</span> = 4000;
 
-<span style="font-weight:bold">fn</span> main() {
-    <span style="font-weight:bold">let</span> listener = net::TcpListener::bind((<span style="font-style:italic">&#34;127.0.0.1&#34;</span>, PROXY_PORT)).unwrap();
 
-    <span style="font-weight:bold">match</span> listener.accept() {
-        Ok((sock, _)) =&gt; handle_connection(sock),
-        Err(e) =&gt; panic!(<span style="font-style:italic">&#34;Error while accepting connection: {}&#34;</span>, e),
-    }
-}
-
-<span style="font-weight:bold">fn</span> handle_connection(tcp: <span style="font-weight:bold">net</span>::TcpStream) {
-    println!(<span style="font-style:italic">&#34;Opened connection: {:?}&#34;</span>, tcp)
-}
-</code></pre></div><h3 id="listening">Listening</h3>
-<p>We&rsquo;re going to use the <a href="https://doc.rust-lang.org/std/net/"><code>std::net</code></a>
-<strong>crate</strong> (you can think of crates as libraries):</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="font-weight:bold">use</span> std::net;
-</code></pre></div><p><a href="https://doc.rust-lang.org/std/net/struct.TcpListener.html"><code>std::net::TcpListener::bind</code></a>
-function is used here to start listening on port 4000 of the localhost.</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="font-weight:bold">const</span> PROXY_PORT: <span style="">u16</span> = 4000;
-<span style="font-weight:bold">let</span> listener = net::TcpListener::bind((<span style="font-style:italic">&#34;127.0.0.1&#34;</span>, PROXY_PORT)).unwrap();
-</code></pre></div><p><code>u16</code> corresponds to <code>uint16</code> known from other languages, so <code>const PROXY_PORT: u16 = 4000;</code> is a definition of a <code>PROXY_PORT</code> constant 16-bit integer equal to
-4000.</p>
-<p>What about the mysterious <code>unwrap()</code> at the end? Rust is a language designed
-with safety with minimal runtime overhead in mind. How is this achieved in this
-case? <code>bind()</code> could&rsquo;ve simply returned <code>TcpListener</code>, but instead it returns
-<a href="https://doc.rust-lang.org/std/io/type.Result.html"><code>std::io::Result&lt;TcpListener&gt;</code></a>.</p>
-<p>What&rsquo;s the difference?</p>
-<p>Something may go wrong while trying to bind the socket (i.e. the port can be
-already in use). This can be handled in many different ways (all with different
-trade-offs):</p>
-<ul>
-<li>throwing an exception (Java, C++?),</li>
-<li>returning a pointer (C, C++),</li>
-<li>returning two values <code>(TcpListener, bool)</code> (Go),</li>
-<li><a href="http://en.cppreference.com/w/cpp/utility/optional"><code>std::optional</code></a> (C++17).</li>
-</ul>
-<p>Throwing an exception does not make the programmer handle it. Returning a
-pointer or a <code>bool</code> value does not help here either. <code>std::optional</code> can be
-simply ignored using <code>*</code>. Rust tries to follow a different path. Instead of the
-abovementioned solutions, an object is returned in a wrapping (<code>Result</code>). This
-type can be one of the two: the expected value of type <code>TcpListener</code> or an error
-(<code>Error</code>)!</p>
-<p>Since binding a socket to a port is vital for this program to run, the only
-thing I do here is <code>unwrap()</code> the result.</p>
-<p>What does this method do? If there is no error - the value is returned. If an
-error happened, <a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panic!</code></a> is
-called (similar to <a href="https://blog.golang.org/defer-panic-and-recover"><code>panic</code></a>
-known from Go).</p>
-<h3 id="accepting-a-connection">Accepting a connection</h3>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="font-weight:bold">match</span> listener.accept() {
-    Ok((sock, _)) =&gt; handle_connection(sock),
-    Err(e) =&gt; panic!(<span style="font-style:italic">&#34;Error while accepting connection: {}&#34;</span>, e),
-}
-</code></pre></div><p>If everything went smoothly, call <code>handle_connection(sock)</code> which will care take
-of the rest.</p>
-<p>If not, <code>panic!</code> with an appropriate error message.</p>
-<h3 id="pattern-matching-match">Pattern matching (<code>match</code>)</h3>
-<p><code>match</code> is a language construct used mostly in functional languages (like
-OCaml, Haskell, Lisp) rather than imperative ones (C, Python, Java, C++) and
-that&rsquo;s why I&rsquo;d like to say a few words about it.</p>
-<p><a href="https://en.wikipedia.org/wiki/Pattern_matching"><strong>Pattern matching</strong></a> is used
-for:</p>
-<ul>
-<li>checking whether the object is what we think it is (in the above code, whether
-it&rsquo;s <code>Ok</code> (a value) or <code>Err</code> (an error))</li>
-<li>dissecting it (<code>Ok</code> is here made of two parts, the first one is the TCP
-socket, the second is the address; I&rsquo;m ignoring the adress (using <code>_</code>), but
-binding the <code>sock</code> variable to the socket).</li>
-</ul>
-<p>For example, if we were to write a simple calculator based on trees of
-arithmetic expressions, a part of code might have looked like this:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="font-weight:bold">match</span> expression {
-    Add(x, y) =&gt; x + y,
-    Sub(x, y) =&gt; x - y,
-    Mul(x, y) =&gt; x * y,
-    Div(x, y) =&gt; x / y,
-}
-</code></pre></div><p>This language construct is possible thanks to types that are an disjunction of
-different possible values. In this case it means that the expression can be i.e.
-an addition or substraction. The information about the kind of expression is
-stored and retrieved at runtime. What&rsquo;s important is the fact that the compiler
-can check whether we&rsquo;ve covered all the possible kinds (and warn us if we forget
-about one).</p>
-<p>We could&rsquo;ve simulated it in C++ in a following way:</p>
-<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cpp" data-lang="cpp"><span style="font-weight:bold">enum</span> <span style="font-weight:bold">Type</span> { Add, Sub, Mul, Div };
-
-<span style="font-weight:bold">struct</span> <span style="font-weight:bold">Expression</span> {
-    Type type;
-    <span style="font-weight:bold">union</span> {
-        Add add;
-        Sub sub;
-        Mul mul;
-        Div div;
-    } expr;
-};
-
-<span style="font-weight:bold">switch</span> expr.type {
-    <span style="font-weight:bold">case</span> Type::Add: <span style="font-weight:bold">return</span> expr.add.x + expr.add.y; <span style="font-weight:bold">break</span>;
-    <span style="font-weight:bold">case</span> Type::Sub: <span style="font-weight:bold">return</span> expr.add.x - expr.add.y; <span style="font-weight:bold">break</span>;
-    <span style="font-weight:bold">case</span> Type::Mul: <span style="font-weight:bold">return</span> expr.add.x * expr.add.y; <span style="font-weight:bold">break</span>;
-    <span style="font-weight:bold">case</span> Type::Div: <span style="font-weight:bold">return</span> expr.add.x / expr.add.y; <span style="font-weight:bold">break</span>;
-}
-</code></pre></div><p>As you can see, pattern matching is pretty convenient. In the languages that
-support it natively, the implementation is better than what I have shown here in
-C++. Unfortunately, I don&rsquo;t know enough about Rust to talk about its internals
-in this case.</p>
-<h3 id="panic"><code>panic!</code></h3>
-<p><code>panic!</code> is a macro (right now we can think of it as a function, but <code>!</code> in Rust
-is an indicator of a macro call) used for critical program errors.</p>
-<p><code>panic!</code> receives an argument list similar to <code>printf</code> known from other
-programming languages, and <code>{}</code> is used to print the values of any type (not
-exactly, more on that later).</p>
-<h2 id="whats-coming-up">What&rsquo;s coming up?</h2>
-<p>In the next posts I plan to talk about:</p>
-<ul>
-<li>handling HTTP requests in different threads</li>
-<li>ownership and borrowing (the main characteristic of Rust that differentiates
-it from popular modern programming languages)</li>
-<li>creating structures</li>
-<li>methods</li>
-<li>traits</li>
-<li>expressions and statements</li>
-<li>and many, many more.</li>
-</ul>
-
+    
+  <section id="about">
+  
+  
+      <p>Find me on
       
       
+      
+        <a class="icon" target="_blank" rel="noopener" href="https://github.com/kele" aria-label="github">
+          <i class="fab fa-github" aria-hidden="true"></i>
+        </a>
+        
+         and 
+      
+      
+        <a class="icon" target="_blank" rel="noopener" href="https://twitter.com/kele_codes" aria-label="twitter">
+          <i class="fab fa-twitter" aria-hidden="true"></i>
+        </a>
+        
+        .
+      
+      </p>
+  
+  
+  </section>
 
+  <section id="writing">
+    <span class="h1"><a href="https://kele.codes/">Writings</a></span>
+    
+
+    
+    
+    
+    
+    
+    <ul class="post-list">
+      
+      
+      
+        <li class="post-item">
+          <div class="meta"><time datetime="2017-06-18 00:00:00 &#43;0000 UTC" itemprop="datePublished">2017-06-18</time></div>
+          <span><a href="https://kele.codes/2017/06/proxy-server-in-rust-part-2/">Proxy server in Rust (part 2)</a></span>
+        </li>
+      
+        <li class="post-item">
+          <div class="meta"><time datetime="2017-06-17 00:00:00 &#43;0000 UTC" itemprop="datePublished">2017-06-17</time></div>
+          <span><a href="https://kele.codes/2017/06/proxy-server-in-rust-part-1/">Proxy server in Rust (part 1)</a></span>
+        </li>
+      
+    </ul>
+    
+  </section>
 
   
-
+  
   
 
 
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2021  kele.codes 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
 
 
-
-  <footer>
-    
-      
-    
-      
-        <ul class="Tags">
-          
-            <li class="Tags-item u-background">
-              <a class="Tags-link u-clickable" href="/tags/foxy/" rel="tag">foxy</a>
-            </li>
-          
-            <li class="Tags-item u-background">
-              <a class="Tags-link u-clickable" href="/tags/rust/" rel="tag">rust</a>
-            </li>
-          
-        </ul>
-      
-    
-  </footer>
-
-    </article>
-    
-      <div class="Divider"></div>
-    
-  
-
-  
-
-
-  <nav>
-    
-      <a class="Pagination u-clickable" href="/page/2/" rel="prev">« Previous</a>
-    
-    
-  </nav>
-
-
-
-      </div>
-    </div>
-  </main>
-  
-  <footer class="Footer">
-    <div class="u-wrapper">
-      <div class="u-padding">
-                <hr />
-        <a href="https://kele.codes" style="color: black; text-decoration: initial">kele.codes</a> |
-        <a href="https://twitter.com/kele_codes" style="color: black; text-decoration: initial">@kele_codes</a>
-    
-      </div>
-    </div>
-  </footer>
-
+  </div>
 </body>
 
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
 </html>
