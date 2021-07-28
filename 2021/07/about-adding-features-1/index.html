@@ -191,7 +191,7 @@ example, to create a list of integer squares, one would write in Python:</p>
 </code></pre></div><p>which uses a construct called <a href="https://www.python.org/dev/peps/pep-0202/">list
 comprehensions</a>.</p>
 <p>In Go, which doesn&rsquo;t feature list comprehensions, one writes simply:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">var</span> z <span style="color:#8be9fd">int</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">var</span> z []<span style="color:#8be9fd">int</span>
 <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
 	z = <span style="color:#8be9fd;font-style:italic">append</span>(z, i<span style="color:#ff79c6">*</span>i)
 }
