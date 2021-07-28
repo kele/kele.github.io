@@ -11,19 +11,20 @@
 	<atom:link href="https://kele.codes/index.xml" rel="self" type="application/rss+xml" />
     
     
+    
     <item>
-      <title>About</title>
-      <link>https://kele.codes/about/</link>
-      <pubDate>Thu, 03 Sep 2020 20:18:48 +0200</pubDate>
+      <title>About Adding Features (part 1)</title>
+      <link>https://kele.codes/2021/07/about-adding-features-1/</link>
+      <pubDate>Sun, 25 Jul 2021 00:00:00 +0000</pubDate>
       
-      <guid>https://kele.codes/about/</guid>
-      <description>Hi. I&amp;rsquo;m kele.
-I like when code is easy to understand.
-I work on making it harder to make mistakes. Sometimes succeeding, but mostly failing. I also help a bit with making Gophers happy.
-Lead reviewer for Paged Out!. Collaborating with Programista.
-E-mail: please find my contact at the Paged Out! page.
-Twitter | GitHub</description>
+      <guid>https://kele.codes/2021/07/about-adding-features-1/</guid>
+      <description>Teaser One of the most clever C tricks I&amp;rsquo;ve ever seen is the following:
+#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); })) The BUILD_BUG_ON_ZERO(e) macro evaluates whether the compile-time value of e is non-zero (yes, the name is misleading). If yes, it results in a compiler error, therefore breaking the build. This trick leverages a few obscure properties of C, one of them being lack of support for bitfields of a negative width (who would&amp;rsquo;ve thought?</description>
     </item>
+    
+    
+    
+    
     
     <item>
       <title>Proxy server in Rust (part 2)</title>
@@ -34,6 +35,8 @@ Twitter | GitHub</description>
       <description>First draft and the basics of Rust.</description>
     </item>
     
+    
+    
     <item>
       <title>Proxy server in Rust (part 1)</title>
       <link>https://kele.codes/2017/06/proxy-server-in-rust-part-1/</link>
@@ -42,6 +45,7 @@ Twitter | GitHub</description>
       <guid>https://kele.codes/2017/06/proxy-server-in-rust-part-1/</guid>
       <description>Writing a simple proxy server in Rust to address my bad productivity habits.</description>
     </item>
+    
     
   </channel>
 </rss>

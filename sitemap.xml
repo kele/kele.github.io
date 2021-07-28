@@ -3,6 +3,26 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://kele.codes/2021/07/about-adding-features-1/</loc>
+    <lastmod>2021-07-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://kele.codes/posts/</loc>
+    <lastmod>2021-07-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://kele.codes/tags/software-philosophy/</loc>
+    <lastmod>2021-07-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://kele.codes/tags/</loc>
+    <lastmod>2021-07-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://kele.codes/about/</loc>
     <lastmod>2020-09-03T20:18:48+02:00</lastmod>
   </url>
@@ -18,22 +38,12 @@
   </url>
   
   <url>
-    <loc>https://kele.codes/posts/</loc>
-    <lastmod>2017-06-18T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://kele.codes/2017/06/proxy-server-in-rust-part-2/</loc>
     <lastmod>2017-06-18T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://kele.codes/tags/rust/</loc>
-    <lastmod>2017-06-18T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://kele.codes/tags/</loc>
     <lastmod>2017-06-18T00:00:00+00:00</lastmod>
   </url>
   

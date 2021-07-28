@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="shortcut icon" href="https://kele.codes/favicon.ico">
+    
+    <link rel="stylesheet" href="/css/style.min.css">
+
+    <title>About Adding Features (part 1)</title>
+</head>
+<body><header id="banner">
+    <h2><a href="https://kele.codes/">kele.codes</a></h2>
+    <nav>
+        <ul>
+            <li>
+                <a href="/" title="">Home</a>
+            </li><li>
+                <a href="/about" title="">About</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main id="content">
+<article>
+    <header id="post-header">
+        <h1>About Adding Features (part 1)</h1>
+            <div>
+                <time>July 25, 2021</time>
+                </div>
+    </header><h2 id="teaser">Teaser</h2>
+<p>One of the most clever C tricks I&rsquo;ve ever seen is the following:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ff79c6">#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
+</span></code></pre></div><p>The
+<a href="https://github.com/torvalds/linux/blob/6f0d349d922ba44e4348a17a78ea51b7135965b1/tools/include/linux/bug.h#L9macro"><code>BUILD_BUG_ON_ZERO(e)</code></a>
+macro evaluates whether the compile-time value of <code>e</code> is non-zero (yes, the
+name is misleading). If yes, it results in a compiler error, therefore breaking
+the build. This trick leverages a few obscure properties of C, one of them
+being lack of support for bitfields of a negative width (who would&rsquo;ve
+thought?).</p>
+<p>That&rsquo;s how we got static assertions in C.</p>
+<p>Whoever wrote this line for the first time must have felt a tremendous sense of
+accomplishment. This must have come at a cost of losing some sanity, though.</p>
+<p>Were <code>sizeof</code> and bitfields designed to support this use case? Unlikely, but
+here we are!</p>
+<p><strong>This article will be published in a few parts (1 (this), &hellip;)</strong></p>
+<h2 id="introduction">Introduction</h2>
+<p><strong>Note:</strong> Although I&rsquo;m mostly talking about (programming) languages, most of
+the considerations here also apply (perhaps even better) to libraries, modules,
+frameworks, and other software building blocks.</p>
+<p>Software engineers always need to choose a tool for the job. Be it a
+programming language, a library or an RPC<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> service they wish to delegate
+tasks to.  These tools can be pliable and extensible, or - in contrast - rigid
+and opinionated.</p>
+<p>In his famous 1998 talk - <a href="https://www.youtube.com/watch?v=_ahvzDzKdB0">&ldquo;Growing a
+Language&rdquo;</a> - Guy L. Steele Jr.
+demonstrated (in a very entertaining way) how a language can grow if it has
+built-in the ways to do so. The protocol he described is simple, elegant, and
+capable. A language like that is very flexible.</p>
+<p>When a tool we use doesn&rsquo;t provide the flexibility we <strong>want</strong> (often don&rsquo;t
+really need), we find a way to do what we had set our mind on anyway. This
+often results in clever<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> and hacky solutions. A question that
+comes to mind then is: <strong>Why didn&rsquo;t the authors implement this feature in the
+first place?</strong></p>
+<h2 id="how-we-got-things-done">How We Got Things Done</h2>
+<h3 id="sfinae-substitution-failure-is-not-an-error">SFINAE (Substitution Failure Is Not An Error)</h3>
+<p>A well-known folk theorem states that C++ templates are Turing complete. People
+have used
+<a href="https://isocpp.org/wiki/faq/templates#templates-vs-overloading">SFINAE</a> for
+the craziest things, some of them making their way into the standard library.
+No seasoned C++ engineer squints their eyes when they see:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cpp" data-lang="cpp"><span style="color:#ff79c6">template</span><span style="color:#ff79c6">&lt;</span><span style="color:#ff79c6">class</span> <span style="color:#50fa7b">T</span> <span style="color:#ff79c6">=</span> std<span style="color:#ff79c6">::</span>enable_if<span style="color:#ff79c6">&lt;</span>...<span style="color:#ff79c6">::</span>value<span style="color:#ff79c6">&gt;::</span>type<span style="color:#ff79c6">&gt;</span>
+<span style="color:#8be9fd">void</span> foo() { ... }
+</code></pre></div><p>a declaration that, to someone unfamiliar with this madness, would read as:
+<em>&ldquo;foo is a generic function with a type parameter T, which is equal to&hellip; WHAT
+IS HAPPENING HERE?!&quot;</em>.</p>
+<p><img src="/images/unexpected-unintended-1-sfinae.jpg" alt="this i sfinae"></p>
+<p>SFINAE gave C++ engineers great power. They could now optimize their function
+calls based on what the passed object offers, with zero runtime cost. All the
+work is done by the compiler and the poor soul who had to write the templates.
+Good luck with debugging, too.</p>
+<h3 id="enforcing-string-literal-arguments">Enforcing String Literal Arguments</h3>
+<p>There are some reasons for enforcing that a given function argument is a string
+<strong>literal</strong> (not just any <code>string</code>). One could probably write a linter to
+achieve such a thing (e.g. <a href="https://github.com/google/error-prone">ErrorProne</a> in
+Java), but in Go, this can be done using this trick:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> fooer
+
+<span style="color:#8be9fd;font-style:italic">type</span> compileTimeString <span style="color:#8be9fd">string</span>
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Foo</span>(s compileTimeString) {
+	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;%s&#34;</span>, s)
+}
+</code></pre></div><p><code>compileTimeString</code> is an unexported type of package <code>fooer</code>, therefore one
+cannot create a <strong>variable</strong> of this type. But, in Go, you can use a string
+literal to create an <strong>untyped</strong> string. Therefore, in the expression
+<code>Foo(&quot;bar&quot;)</code>, the argument is actually an untyped string and it is coerced to
+<code>compileTimeString</code>.</p>
+<p>In the case of Go, this feels like an obscure property of a language that
+otherwise embraces simplicity and clarity.</p>
+<h2 id="what-has-just-happened">What Has Just Happened?</h2>
+<p>Let&rsquo;s take another look at the problems we&rsquo;ve tried to solve:</p>
+<ul>
+<li>static assertion on a compile-time expression,</li>
+<li>ensuring basic properties of a type we&rsquo;re writing a function for (e.g. it has
+a given method),</li>
+<li>expecting compile-time literal values as opposed to dynamic (possibly
+user-controlled) ones.</li>
+</ul>
+<p>As you can see: <strong>none of the presented solutions are easy to read</strong>. If you
+haven&rsquo;t seen any of these before, I expect you to scratch your head <strong>a lot</strong>
+and still run out of patience before getting it. <strong>The problem isn&rsquo;t you.</strong></p>
+<p>A deceivingly simple way to stop this <em>madness</em> would be to extend the language
+itself to support such use cases. But, there are many reasons why languages
+don&rsquo;t add first-class support for some features.</p>
+<h2 id="why-cant-my-language-just-support-x">Why Can&rsquo;t My Language Just Support X?</h2>
+<p>Firstly, we need to consider whether we want a rich feature set to begin with,
+regardless of the implementation cost.</p>
+<p>Then, we should consider what it takes to have an implementation of a language
+(library) with many features.</p>
+<p>Lastly, what the cost of adopting new features in a language (library) that
+already exists (and has many, many users) is.</p>
+<h3 id="do-we-really-want-lots-of-features">Do We Really Want Lots of Features?</h3>
+<h4 id="the-ramp-up-cost">The Ramp-Up Cost</h4>
+<p>The bigger<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup> the language is, the higher the ramp-up cost. In your
+project, this might be negligible if new contributors are rare. Nonetheless, it
+is also a high barrier to entry for folks who are trying to <strong>learn</strong> new
+technology in their spare time.</p>
+<p>Sometimes the high ramp-up cost is worth the productivity benefits one gains
+when familiar with the tool. For example, Rust&rsquo;s borrow checking seems hard to
+learn at first but eliminates whole classes of bug that C programmers have
+been struggling with for decades.</p>
+<h4 id="theres-more-than-one-way">There&rsquo;s More Than One Way</h4>
+<p>Quite often an unintended consequence of adding a feature is opening the
+avenues of doing things in more than one way. At first glance (at second,
+probably, too), this shouldn&rsquo;t be an issue. What&rsquo;s wrong with having options,
+right?</p>
+<h5 id="subtle-differences">Subtle Differences</h5>
+<p>One of the problems lies in the fact that <strong>the differences between approaches
+are often subtle</strong>, but vital in some scenarios. Examples include:</p>
+<ul>
+<li>pre-incrementation and post-incrementation (<code>++x </code>and <code>x++</code>),</li>
+<li>the multitude of ways one can
+<a href="https://en.cppreference.com/w/cpp/language/initialization">initialize</a> an
+object in C++,</li>
+<li>equality checks in
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness">JavaScript</a>
+or <a href="https://gynvael.coldwind.pl/?id=492">PHP</a>.</li>
+</ul>
+<p>Because these solutions actually differ in some scenarios, their pros and cons
+need to be considered. These (opinionated) analyses make their way into coding
+style guides, tutorials, and blog posts. One needs to now learn what the
+preferred approach is,the approach  that should be used in obscure cases, and
+which approaches should be avoided at all costs; even though they look all
+equally good at solving the problem at hand.</p>
+<h5 id="consistency">Consistency</h5>
+<p>One more benefit of having exactly one way to solve a problem is
+<strong>consistency</strong>. Working with a unified codebase makes things easier for
+developers switching between projects, as their ramp-up doesn&rsquo;t involve getting
+used to a new way of doing things. Static analysis (more on that later) tooling
+becomes simpler as there are fewer cases to support. Enough consistency can
+also enable <a href="https://www.oreilly.com/library/view/software-engineering-at/9781492082781/ch22.html">Large-Scale
+Changes</a>.</p>
+<h4 id="context-heavy-code">Context Heavy Code</h4>
+<p>Let&rsquo;s take a look at the following snippet:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">store(db, x)
+</code></pre></div><p>What does this code do? Well, it depends whether the language:</p>
+<ul>
+<li>supports implicit conversions to mutable references (e.g. <code>void store(DB &amp;db, Val &amp;x)</code> in C++, as opposed to a <code>store(&amp;mut db, x)</code> call in Rust) &ndash; this
+might allow both <code>db</code> and <code>x</code> to be modified by <code>store(),</code></li>
+<li>supports implicit user-defined conversions (e.g. what if <code>x</code> is not the right
+type, but could be implicitly converted to a type that matches the signature of
+<code>store()</code>?),</li>
+<li>features borrowing (e.g. like
+<a href="https://doc.rust-lang.org/1.8.0/book/references-and-borrowing.html">Rust</a>),</li>
+<li>supports <a href="https://en.wikipedia.org/wiki/Evaluation_strategy#Non-strict_evaluation">non-strict
+evaluation</a>,</li>
+<li>and many other things.</li>
+</ul>
+<p>Any of the above features expand the ocean of possibilities of what this single
+line of code can do. This burdens the reader with keeping in their mind lots of
+context; increasing the overall cognitive load needed to understand the
+program. This is especially taxing when the technology stack of your project
+isn&rsquo;t uniform and you need to consciously keep track of which set of patterns you
+should recognize at a given time.</p>
+<h4 id="idioms">Idioms</h4>
+<p>Engineers strive to write <strong>idiomatic code</strong>. We tend to like patterns, as they
+let us understand things at a glance (if we&rsquo;re familiar with them). For
+example, to create a list of integer squares, one would write in Python:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">z <span style="color:#ff79c6">=</span> [ i<span style="color:#ff79c6">*</span>i <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">in</span> <span style="color:#8be9fd;font-style:italic">range</span>(<span style="color:#bd93f9">0</span>, <span style="color:#bd93f9">10</span>) ]
+</code></pre></div><p>which uses a construct called <a href="https://www.python.org/dev/peps/pep-0202/">list
+comprehensions</a>.</p>
+<p>In Go, which doesn&rsquo;t feature list comprehensions, one writes simply:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">var</span> z <span style="color:#8be9fd">int</span>
+<span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
+	z = <span style="color:#8be9fd;font-style:italic">append</span>(z, i<span style="color:#ff79c6">*</span>i)
+}
+</code></pre></div><p>and <strong>both code snippets are idiomatic in their respective languages</strong>. It
+would not have surprised me if you got a code review comment requesting a
+change if you used a <code>for</code> loop in Python for this task, but in Go, there is
+simply no alternative.</p>
+<p>Sometimes, adding a feature completely changes the feel of a language.</p>
+<h4 id="making-things-error-prone">Making Things Error-Prone</h4>
+<p>In C (and other languages<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>), one can use assignment as an expression
+(e.g. in an <code>if</code> condition). Code like this is fairly common:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ff79c6">while</span> ((c <span style="color:#ff79c6">=</span> getchar()) <span style="color:#ff79c6">!=</span> EOF) {
+	<span style="color:#6272a4">// ...
+</span><span style="color:#6272a4"></span>}
+</code></pre></div><p>This, unfortunately, makes many other seemingly innocent programs error-prone.
+Consider this snippet:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ff79c6">while</span> (x <span style="color:#ff79c6">==</span> y) {
+	<span style="color:#6272a4">// ...
+</span><span style="color:#6272a4"></span>}
+</code></pre></div><p>Now, one can easily make a typo or overlook a missing <code>=</code> sign during a code
+review. That would be a bug, resulting in mutating <code>x</code> (and the check likely
+passing too).</p>
+<h4 id="gotcha">Gotcha!</h4>
+<p>Some features are just plain weird and complicated. There are usually <em>some</em>
+reasons behind introducing them, but they are scary nevertheless. It seems to
+be a good idea to make them obvious (like Rust does when you use <code>unsafe</code>), but
+this often doesn&rsquo;t happen. Consider the following:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// Definitions of the Bar interface and BarImpl struct are omitted.
+</span><span style="color:#6272a4"></span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Foo</span>() Bar {
+	<span style="color:#8be9fd;font-style:italic">var</span> bar <span style="color:#ff79c6">*</span>BarImpl
+	<span style="color:#ff79c6">if</span> (bar <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span>) {
+    		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Abra&#34;</span>)
+	}
+	<span style="color:#ff79c6">return</span> bar
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	<span style="color:#ff79c6">if</span> (<span style="color:#50fa7b">Foo</span>() <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span>) {
+    		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Kadabra&#34;</span>)
+	}
+}
+</code></pre></div><p>The code above compiles without any warnings or errors. Can you guess what it
+prints<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup>?</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">Abra
+</code></pre></div><p>If you are not familiar with Go, this might be a surprise to you.  This is
+because, in Go, a <code>nil</code> pointer to a concrete type is not the same as a <code>nil</code>
+interface value<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>]. This is a feature that is sometimes
+convenient<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup>, but utterly confusing to new Gophers.</p>
+<h4 id="undefined-behavior">Undefined Behavior</h4>
+<p>One infamous <em>feature</em> of languages like C or C++ is the so-called
+<em><a href="https://en.cppreference.com/w/cpp/language/ub">undefined or unspecified
+behavior</a></em>. For example, <a href="https://en.cppreference.com/w/cpp/language/eval_order">the
+order of evaluation of function call
+arguments</a> is an
+unspecified behavior in C++. This can lead to surprising errors like a memory
+leak described <a href="https://dustri.org/b/my-favourite-c-footgun.html">here</a>.</p>
+<p>Not defining the precise behavior of a given language construct is not done out
+of laziness. It gives the compiler enough freedom to perform plenty of
+optimizations. These can even be platform-specific, making it possible to
+create efficient ports of software.</p>
+<p>The question remains: how much flexibility is too much?</p>
+<h2 id="what-is-the-cost-of-implementing-a-feature">What Is the Cost of Implementing a Feature?</h2>
+<p>At some point, we are convinced that a new feature belongs to a language
+(library). It fits well and improves the ergonomics. For it to be useful, it
+needs to be implemented. In the cases where this is possible (not always), it
+might take a long time to do it right. Even then, we might have inadvertently
+changed how it feels to use the language (library) as a whole.</p>
+<p>In the next post, we&rsquo;ll talk more about the (lasting) costs of adding a feature
+to your language (library).</p>
+<!-- raw HTML omitted -->
+<h2 id="notes">Notes</h2>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>Remote Procedure Call. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p><a href="https://mobile.twitter.com/TitusWinters/status/1418569362647232518">https://mobile.twitter.com/TitusWinters/status/1418569362647232518</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3" role="doc-endnote">
+<p>For some definition of <em>bigger</em>. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4" role="doc-endnote">
+<p>There was some relatively recent drama involving introducing such a
+feature in Python, playfully named <a href="https://www.python.org/dev/peps/pep-0572/">the walrus operator
+(&quot;:=&rdquo;)</a>]. It&rsquo;s not exactly the
+same as in C, though. <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5" role="doc-endnote">
+<p><a href="https://play.golang.org/p/YQ1npl7H2CE">https://play.golang.org/p/YQ1npl7H2CE</a> <a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6" role="doc-endnote">
+<p><a href="https://golang.org/ref/spec#Variables:">https://golang.org/ref/spec#Variables:</a> <em>&ldquo;Variables of interface type also
+have a distinct dynamic type, which is the concrete type of the value
+assigned to the variable at run time (unless the value is the predeclared
+identifier <!-- raw HTML omitted -->nil`, which has no type).&quot;</em> <a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:7" role="doc-endnote">
+<p>You can access a <a href="https://developers.google.com/protocol-buffers/docs/gotutorial">protocol
+buffer</a> field
+like <code>x.GetFoo().GetBar().GetXyz()</code> like this without any worries about
+panics.  This is because the methods are well-defined on <code>nil</code> receivers (of
+the concrete type). <a href="#fnref:7" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</article>
+
+        </main><footer id="footer">
+    Copyright © 2021 Damian Bogel
+</footer>
+</body>
+</html>
