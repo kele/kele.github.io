@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="shortcut icon" href="https://kele.codes/favicon.ico">
+    
+    <link rel="stylesheet" href="/css/style.min.css">
+
+    <title>About Adding Features (part 2)</title>
+</head>
+<body><header id="banner">
+    <h2><a href="https://kele.codes/">kele.codes</a></h2>
+    <nav>
+        <ul>
+            <li>
+                <a href="/" title="">Home</a>
+            </li><li>
+                <a href="/about" title="">About</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main id="content">
+<article>
+    <header id="post-header">
+        <h1>About Adding Features (part 2)</h1>
+            <div>
+                <time>August 8, 2021</time>
+                </div>
+    </header><p><em>This is the second part of the &ldquo;About Adding Features&rdquo; series of posts.  The
+first post is <a href="https://kele.codes/2021/07/about-adding-features-1/">here</a>.</em></p>
+<p>At some point, we are convinced that a new feature belongs to a library. It
+fits well, improves the ergonomics, and on top of that - doesn&rsquo;t seem like that
+much work. The costs that immediately come to mind are the engineering time
+needed to implement the feature and the long-term maintenance burden. This is
+not the whole picture, though. There are many pitfalls one has to avoid when
+extending or changing a public interface.</p>
+<h2 id="cognitive-load">Cognitive Load</h2>
+<p>Undeniably, the architecture of a library has the most significant impact on
+the user&rsquo;s experience. It affects the organization of the public interface, how
+it needs to be used, and - perhaps most importantly - how programmers need to
+think about the problem they are trying to solve.</p>
+<p>Explaining how to choose a suitable mental model is well beyond the scope of
+this post (and I don&rsquo;t really have an unconquerable answer). Assuming it has
+been picked - we should strive to keep it as simple as possible. Even if we
+break DRY<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> here and there.</p>
+<h2 id="complexity-and-quantity">Complexity and Quantity</h2>
+<p>Would you rather fight 100 duck-sized horses or 1 horse-sized duck?<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> It&rsquo;s a
+silly question, but an interesting one. It shows that it is not obvious to us
+how problems scale, neither with size nor quantity.</p>
+<p>We can change the theme to coding and ask an analogous question: would you
+rather use 100 small interfaces or 1 big one? In many cases, the number 100
+would be an exaggeration. One rarely has to deal with  100 interfaces to solve
+a problem. It is also not the case that - with the big interface - one has to
+deal with the whole thing at once. As usual, it seems that the answer is both
+&ldquo;it depends&rdquo; and &ldquo;somewhere in between&rdquo;.</p>
+<p>To stay pragmatic, though, we can follow the rule of thumb: <strong>do what reduces
+complexity, or increases it the least.</strong> But how to apply it in practice? Take
+Go&rsquo;s standard library package <code>strings</code> as an example - it offers many
+functions for inspecting or manipulating text. Amongst other functions, it
+includes:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Contains</span>(s, substr <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">bool</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">ContainsAny</span>(s chars <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">bool</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">ContainsRune</span>(s <span style="color:#8be9fd">string</span>, r <span style="color:#8be9fd">rune</span>) <span style="color:#8be9fd">bool</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">HasPrefix</span>(s, prefix <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">bool</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">HasSuffix</span>(s, suffix <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">bool</span>
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Trim</span>(s, cutset <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimFunc</span>(s <span style="color:#8be9fd">string</span>, f <span style="color:#8be9fd;font-style:italic">func</span>(<span style="color:#8be9fd">rune</span>) <span style="color:#8be9fd">bool</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimLeft</span>(s, cutset <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimLeftFunc</span>(s <span style="color:#8be9fd">string</span>, f <span style="color:#8be9fd;font-style:italic">func</span>(<span style="color:#8be9fd">rune</span>) <span style="color:#8be9fd">bool</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimPrefix</span>(s, prefix <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimRight</span>(s, cutset <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimRightFunc</span>(s <span style="color:#8be9fd">string</span>, f <span style="color:#8be9fd;font-style:italic">func</span>(<span style="color:#8be9fd">rune</span>) <span style="color:#8be9fd">bool</span>) <span style="color:#8be9fd">string</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">TrimSuffix</span>(s, suffix <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">string</span>
+</code></pre></div><h3 id="specialize-or-parametrize">Specialize or Parametrize?</h3>
+<p>To make the package smaller, one could instead come up with<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Contains</span>(s <span style="color:#8be9fd">string</span>, r Rule) <span style="color:#8be9fd">bool</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Trim</span>(s <span style="color:#8be9fd">string</span>, r Rule) <span style="color:#8be9fd">string</span>
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Substring</span>(s <span style="color:#8be9fd">string</span>) Rule
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">CharSet</span>(set <span style="color:#8be9fd">string</span>) Rule
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Func</span>(f <span style="color:#8be9fd;font-style:italic">func</span>(<span style="color:#8be9fd">rune</span>) <span style="color:#8be9fd">bool</span>) Rule
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">FromLeft</span>(r Rule) Rule
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">FromRight</span>(r Rule) Rule
+</code></pre></div><p>Now, we replace:</p>
+<ul>
+<li><code>ContainsAny(s, substr)</code> with <code>Contains(s, CharSet(substr))</code>,</li>
+<li><code>TrimLeft(s, cs)</code> with <code>Trim(s, FromLeft(CharSet(cs))</code>,</li>
+<li><code>TrimPrefix(s, prefix)</code> with <code>Trim(s, FromLeft(Substring(prefix))</code>,</li>
+<li>and so on.</li>
+</ul>
+<p>As you can see, we have managed to cut the number of different functions almost
+in half (13 vs. 7). Is it really an improvement, though? We have increased the
+complexity of the mental model by introducing a new concept - a <code>Rule</code>. Now,
+every developer needs to understand what a <code>Rule</code> is within the <code>strings</code>
+package, and how it&rsquo;s used. We also added <code>Rule</code> transformations, namely
+<code>FromLeft</code> and <code>FromRight</code>, in order to support <code>TrimLeft</code> and <code>TrimRight</code>
+(along with their <code>Func</code> variants).</p>
+<h3 id="yagni">YAGNI</h3>
+<p>One could argue that introducing the <code>Rule</code> interface opens up more
+possibilities. We can now trim log statements (e.g. <strong><code>&quot;13-03-2021 15:35:21 foo/bar/baz.go:123:</code></strong><code> error during frombulating&quot;</code>) by creating a new <code>Rule</code>
+that matches the timestamp and code path prefix. This saves us the cost of
+reimplementing the <code>Trim</code> part of the function ourselves!</p>
+<p>In such cases, it is worth it to consider the YAGNI<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup> (You aren&rsquo;t gonna
+need it) principle. If not taken to extremes (pun intended), it can be
+beneficial to determine whether additional complexity is warranted. Consider
+also what would be the cost of adding the thing you wanted now in the future.
+Would it be roughly the same as if you did it now? If yes, then postpone it.</p>
+<p>There is usually little harm in adding an extra convenience method, e.g. adding
+<code>Contains</code>, even if <code>Find</code> could be used instead. It is still important to not
+introduce inconsistencies - e.g. if <code>Find</code> works with empty strings, <code>Contains</code>
+should too.</p>
+<p>But what if we actually <strong>need</strong> to trim the log statements?</p>
+<h3 id="utility-packages">Utility Packages</h3>
+<p>In such a case, consider creating a utility package that works <strong>with</strong> the
+interface instead of extending it. For the sake of argument, let&rsquo;s assume that
+<code>Trim</code> is heavily optimized under the hood - and we <strong>don&rsquo;t</strong> want to
+reimplement it. We can implement the prefix matching logic and then simply use
+<code>TrimPrefix</code> to cut it out.</p>
+<p>What if it turns out that this is not the only complex trimming operation that
+is commonly needed? Well, we can come up with a <code>trimutil</code> package that
+implements <code>TrimPrefix(s string, m Match)</code>. Whoever needs the complexity of
+matching the string according to its format will easily understand what&rsquo;s going
+on. Who doesn&rsquo;t - won&rsquo;t have to.</p>
+<h3 id="not-enough-pieces">Not Enough Pieces</h3>
+<p>It is not always the case that we can build things <strong>on top of</strong> a package.
+Many libraries contain enough functionality to make it difficult to accommodate
+the wishes of all its potential users. Take the example of the Go HTTP library
+that provides a simple file server:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">FileServer</span>(root FileSystem) Handler
+</code></pre></div><p>It&rsquo;s a fantastically simple interface that gets the job done. Under the hood,
+it handles the intricacies of the HTTP protocol, range requests, redirects,
+<code>If-Modified-Since</code> headers and so on. But what if we&rsquo;d like to use it to serve
+our web application? It&rsquo;s all well until the user asks for a non-existing file.
+They&rsquo;ll be greeted with a rather ascetic <code>&quot;404 Not Found&quot;</code> plaintext message.
+This is a very different user experience from any well-polished service, where
+the error site has pretty graphics and offers ways to help the user reach where
+they need to be.</p>
+<p>Is there a way to configure the <code>FileServer</code>s error responses? No. Is there a
+way to build on top of it, keeping all the much-needed functionality that hides
+underneath? Yes, but it&rsquo;d be pretty complicated<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup>.</p>
+<h3 id="consider-the-problem">Consider the Problem</h3>
+<p>The library authors could&rsquo;ve done the following instead:</p>
+<ol>
+<li>create a new <code>FileServer</code> type with configurable error responses; or</li>
+<li>add a parameter to the <code>FileServer</code> call that allows for providing its own
+error responses.</li>
+</ol>
+<p>The options above are by no means an exhaustive list. Both would extend the
+<code>http</code> package (which is already pretty big by Go standards) and add some
+complexity to the implementation. If there was ever a discussion about doing
+this, they have decided against it.</p>
+<p>One good argument supporting such a decision starts with a thought experiment:
+**who are the users of this API? **It is clear that this was meant to be a
+simple file server. There is no support for compression, generating index pages
+, and so on (like e.g. fasthttp
+<a href="https://pkg.go.dev/github.com/valyala/fasthttp?utm_source=godoc#FS">does</a>).
+You could safely say that <strong>it is not meant for advanced users - and that&rsquo;s
+ok!</strong></p>
+<p>Always ask yourself who the users are and what problem they are trying to
+tackle. Look at it holistically - quite often, it will turn out that providing
+just one feature is still not enough to solve the task at hand. It can also
+lead you to a completely different path - and that&rsquo;s ok too.</p>
+<h2 id="notes">Notes</h2>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p><a href="https://en.wikipedia.org/wiki/Don%27t_repeat_yourself">Don&rsquo;t Repeat
+Yourself</a>, see also
+<a href="https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction">The Wrong Abstraction by Sandi
+Metz</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>The Atlantic
+<a href="https://www.theatlantic.com/politics/archive/2013/01/president-obama-would-choose-to-fight-the-horse-sized-duck/267071/">pondered</a>
+what would President Obama do in such a situation. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3" role="doc-endnote">
+<p>A bit more effort, and we&rsquo;re going to reinvent regular expressions. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4" role="doc-endnote">
+<p><a href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it">https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it</a> <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5" role="doc-endnote">
+<p>You&rsquo;d need to intercept the calls to <code>ResponseWriter</code> and listen for
+errors. After that, anything else that&rsquo;s written would need to be ignored.
+Feels like a hack. <a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</article>
+
+        </main><footer id="footer">
+    Copyright © 2021 Damian Bogel
+</footer>
+</body>
+</html>
