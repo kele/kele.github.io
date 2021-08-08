@@ -12,6 +12,18 @@
     
     
     <item>
+      <title>About Adding Features (part 2)</title>
+      <link>https://kele.codes/2021/08/about-adding-features-2/</link>
+      <pubDate>Sun, 08 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://kele.codes/2021/08/about-adding-features-2/</guid>
+      <description>This is the second part of the &amp;ldquo;About Adding Features&amp;rdquo; series of posts. The first post is here.
+At some point, we are convinced that a new feature belongs to a library. It fits well, improves the ergonomics, and on top of that - doesn&amp;rsquo;t seem like that much work. The costs that immediately come to mind are the engineering time needed to implement the feature and the long-term maintenance burden.</description>
+    </item>
+    
+    
+    
+    <item>
       <title>About Adding Features (part 1)</title>
       <link>https://kele.codes/2021/07/about-adding-features-1/</link>
       <pubDate>Sun, 25 Jul 2021 00:00:00 +0000</pubDate>
